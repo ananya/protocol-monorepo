@@ -71,11 +71,6 @@ the account.
 
 `data AnyAgreementAccountData lq ts rtb` - AnyType wrapper of any existing `AgreementAccountData`
 
-**Account**
-
-`Account acc lq ts rtb addr` type class describes addressable account types, where all agreement account data of the
-account is enumerable.
-
 ### Agreements Modules
 
 These are instances of the agreement concept:
