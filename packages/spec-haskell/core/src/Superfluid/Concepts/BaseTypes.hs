@@ -6,7 +6,7 @@ import           Data.Default
 --
 -- Naming conventions:
 --  * Type name: lq
---  * Type family name: SF_LQ
+--  * Type family name: AU_LQ
 class (Default lq, Num lq, Ord lq, Show lq) => Liquidity lq where
     integralToLiquidity :: (Integral int) => int -> lq
     integralToLiquidity = fromInteger . toInteger
@@ -15,5 +15,5 @@ class (Default lq, Num lq, Ord lq, Show lq) => Liquidity lq where
 --
 -- Naming conventions:
 --  * Type name: ts
---  * Type family name: SF_TS
+--  * Type family name: AU_TS
 class (Default ts, Integral ts, Ord ts, Show ts) => Timestamp ts

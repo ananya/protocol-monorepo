@@ -15,7 +15,7 @@ library
     exposed-modules:
         Superfluid.Concepts.BaseTypes
         Superfluid.Concepts.RealtimeBalance
-        Superfluid.Concepts.SuperfluidTypes
+        Superfluid.Concepts.AccountingUnit
         Superfluid.Concepts.Agreement
         Superfluid.Agreements.TransferableBalanceAgreement
         Superfluid.Agreements.ConstantFlowAgreement

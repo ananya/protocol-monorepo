@@ -14,12 +14,8 @@ module Superfluid.Instances.Simple.SuperfluidTypes
 import           Data.Default
 import           Text.Printf                         (printf)
 
-import           Superfluid.Concepts.SuperfluidTypes
-    ( Liquidity
-    , RealtimeBalance (..)
-    , RealtimeBalanceAsNum (..)
-    , Timestamp
-    )
+import           Superfluid.Concepts.BaseTypes       (Liquidity, Timestamp)
+import           Superfluid.Concepts.RealtimeBalance (RealtimeBalance (..), RealtimeBalanceAsNum (..))
 
 -- ============================================================================
 -- Wad type:

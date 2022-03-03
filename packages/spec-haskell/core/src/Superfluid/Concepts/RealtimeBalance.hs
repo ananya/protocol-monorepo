@@ -16,7 +16,7 @@ import           Superfluid.Concepts.BaseTypes (Liquidity)
 --
 -- Naming conventions:
 --  * Type name : rtb
---  * Type family name: SF_RTB
+--  * Type family name: AU_RTB
 --  * Term name: *RTB *Balance
 --
 class (Liquidity lq, Num rtb, Default rtb) => RealtimeBalance rtb lq | rtb -> lq where

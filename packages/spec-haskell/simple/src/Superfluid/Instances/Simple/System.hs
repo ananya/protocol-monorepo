@@ -1,5 +1,4 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
 module Superfluid.Instances.Simple.System
@@ -34,6 +33,7 @@ import           Data.Char
 import           Data.Default
 import qualified Data.Map                                           as M
 
+import           Superfluid.Concepts.AccountingUnit                 (AccountingUnit (..))
 import           Superfluid.Concepts.Agreement                      (AnyAgreementAccountData (MkAgreementAccountData))
 --
 import qualified Superfluid.Agreements.ConstantFlowAgreement        as CFA
@@ -46,6 +46,8 @@ import           Superfluid.Instances.Simple.SuperfluidTypes
 -- ============================================================================
 -- SimpleAddress Base Type
 --
+-- Note: It must consist of only alphabetical letters
+--
 newtype SimpleAddress = SimpleAddress String deriving (Eq, Ord, Show)
 
 instance SF.Address SimpleAddress
@@ -57,9 +59,9 @@ createSimpleAddress a = if (all isAlpha a) then Just $ SimpleAddress a else Noth
 -- ============================================================================
 -- Simple Types for Agreements
 --
-type SimpleTBAAccountData = TBA.TBAAccountData Wad SimpleTimestamp SimpleRealtimeBalance
-type SimpleCFAContractData = CFA.CFAContractData Wad SimpleTimestamp SimpleRealtimeBalance
-type SimpleCFAAccountData = CFA.CFAAccountData Wad SimpleTimestamp SimpleRealtimeBalance
+type SimpleTBAAccountData = TBA.TBAAccountData SimpleAccount
+type SimpleCFAContractData = CFA.CFAContractData SimpleAccount
+type SimpleCFAAccountData = CFA.CFAAccountData SimpleAccount
 
 -- ============================================================================
 -- SimpleAccount Type and Operations (is SuperfluidAccount)
@@ -71,7 +73,13 @@ data SimpleAccount = SimpleAccount
     , lastUpdatedAt :: SimpleTimestamp
     }
 
-instance SF.Account SimpleAccount Wad SimpleTimestamp SimpleRealtimeBalance SimpleAddress where
+instance AccountingUnit SimpleAccount where
+    type AU_LQ SimpleAccount = Wad
+    type AU_TS SimpleAccount = SimpleTimestamp
+    type AU_RTB SimpleAccount = SimpleRealtimeBalance
+
+instance SF.Account SimpleAccount where
+    type ACC_ADDR SimpleAccount = SimpleAddress
 
     getTBAAccountData = tba
 
@@ -161,15 +169,12 @@ _putSimpleTokenData = SimpleTokenStateT . put
 _modifySimpleTokenData :: (Monad m) => (SimpleTokenData -> SimpleTokenData) -> SimpleTokenStateT m ()
 _modifySimpleTokenData = SimpleTokenStateT . modify
 
+
 -- | SimpleTokenStateT m is a SuperfluidToken instance
 --
 instance (Monad m) => SF.SuperfluidToken (SimpleTokenStateT m) where
 
-    type SF_LQ (SimpleTokenStateT m) = Wad
-    type SF_TS (SimpleTokenStateT m) = SimpleTimestamp
-    type SF_RTB (SimpleTokenStateT m) = SimpleRealtimeBalance
-    type SF_ADDR (SimpleTokenStateT m) = SimpleAddress
-    type SF_ACC (SimpleTokenStateT m) = SimpleAccount
+    type TK_ACC (SimpleTokenStateT m) = SimpleAccount
 
     getCurrentTime = getSystemData >>= return . currentTime
 

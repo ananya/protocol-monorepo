@@ -1,8 +1,6 @@
 {-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE TypeFamilies           #-}
 
 module Superfluid.System
@@ -10,19 +8,19 @@ module Superfluid.System
     , Account (..)
     , balanceOfAccountAt
     , sumAccounts
-    , SFStorageInstruction (..)
+    , AccountStorageInstruction (..)
     , SuperfluidToken (..)
     ) where
 
 import           Control.Monad                                      (Monad)
 import           Data.Default
 
+import           Superfluid.Concepts.AccountingUnit                 (AccountingUnit (..))
 import           Superfluid.Concepts.Agreement
     ( AnyAgreementAccountData
     , providedBalanceOfAnyAgreement
     )
 import           Superfluid.Concepts.RealtimeBalance                (liquidityToRTB)
-import           Superfluid.Concepts.SuperfluidTypes                (Liquidity, RealtimeBalance, Timestamp)
 --
 import qualified Superfluid.Agreements.ConstantFlowAgreement        as CFA
 import qualified Superfluid.Agreements.TransferableBalanceAgreement as TBA
@@ -32,8 +30,9 @@ import qualified Superfluid.Agreements.TransferableBalanceAgreement as TBA
 --
 -- Naming conventions:
 --  * Type name: addr
---  * Type family name: SF_ADDR
+--  * Type family name: ACC_ADDR
 class (Eq addr, Show addr) => Address addr
+
 
 -- | Account type class
 --
@@ -41,44 +40,39 @@ class (Eq addr, Show addr) => Address addr
 --   * Type name: acc
 --   * Type family name: SF_ACC
 --   * Term name: *Account
-class (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq, Address addr)
-    => Account acc lq ts rtb addr
-    | acc -> lq, acc -> ts, acc -> addr, acc -> rtb where
+class (AccountingUnit acc) => Account acc where
 
-    getTBAAccountData :: acc -> TBA.TBAAccountData lq ts rtb
+    type ACC_ADDR acc :: *
 
-    getCFAAccountData :: acc -> CFA.CFAAccountData lq ts rtb
+    getTBAAccountData :: acc -> TBA.TBAAccountData acc
 
-    showAccountAt :: acc -> ts -> String
+    getCFAAccountData :: acc -> CFA.CFAAccountData acc
 
-    addressOfAccount :: acc -> addr
+    showAccountAt :: acc -> AU_TS acc -> String
 
-    agreementsOfAccount :: acc -> [AnyAgreementAccountData lq ts rtb]
+    addressOfAccount :: acc -> ACC_ADDR acc
 
+    agreementsOfAccount :: acc -> [AnyAgreementAccountData acc]
 
-balanceOfAccountAt
-    :: (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq, Address addr, Account acc lq ts rtb addr)
-    => acc -> ts -> rtb
+balanceOfAccountAt :: Account acc => acc -> AU_TS acc -> AU_RTB acc
 balanceOfAccountAt holderAccount t = foldr
     (+)
     (liquidityToRTB . fromInteger $ 0)
     (map (flip providedBalanceOfAnyAgreement t) (agreementsOfAccount holderAccount))
 
-sumAccounts
-    :: (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq, Address addr, Account acc lq ts rtb addr)
-    => [acc] -> ts -> rtb
+sumAccounts :: Account acc => [acc] -> AU_TS acc -> AU_RTB acc
 sumAccounts alist t = foldr (+) def (map (flip balanceOfAccountAt t) alist)
 
 -- ============================================================================
--- | SFStorageInstruction Sum Type
+-- | AccountStorageInstruction Sum Type
 --
-data SFStorageInstruction lq ts rtb addr where
-    UpdateLiquidity :: (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-        => (addr, TBA.TBAAccountData lq ts rtb) -> SFStorageInstruction lq ts rtb addr
-    UpdateFlow :: (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-        => (addr, addr, CFA.CFAContractData lq ts rtb) -> SFStorageInstruction lq ts rtb addr
-    UpdateAccountFlow :: (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq, Address addr)
-        => (addr, CFA.CFAAccountData lq ts rtb) -> SFStorageInstruction lq ts rtb addr
+data AccountStorageInstruction acc where
+    UpdateLiquidity :: Account acc
+        => (ACC_ADDR acc, TBA.TBAAccountData acc) -> AccountStorageInstruction acc
+    UpdateFlow :: Account acc
+        => (ACC_ADDR acc, ACC_ADDR acc, CFA.CFAContractData acc) -> AccountStorageInstruction acc
+    UpdateAccountFlow :: Account acc
+        => (ACC_ADDR acc, CFA.CFAAccountData acc) -> AccountStorageInstruction acc
 
 -- ============================================================================
 -- | SuperfluidToken Type Class
@@ -95,37 +89,23 @@ data SFStorageInstruction lq ts rtb addr where
 --   * and agreement (TBA/CFA/GDA) operations.
 -- * Instructions for write operations are executed in `execSFStorageInstructions`.
 --
-class ( Monad tk
-      , Liquidity (SF_LQ tk)
-      , Timestamp (SF_TS tk)
-      , Address (SF_ADDR tk)
-      , RealtimeBalance (SF_RTB tk) (SF_LQ tk)
-      , Account (SF_ACC tk) (SF_LQ tk) (SF_TS tk) (SF_RTB tk)(SF_ADDR tk))
-    => SuperfluidToken tk where
+class ( Monad tk , Account (TK_ACC tk) ) => SuperfluidToken tk where
 
-    -- Associated type families
-    type SF_LQ tk :: *
-    type SF_TS tk :: *
-    type SF_RTB tk :: *
-    type SF_ADDR tk :: *
-    type SF_ACC tk :: *
+    type TK_ACC tk :: *
 
     --
     -- System operations
     --
-    getCurrentTime :: tk (SF_TS tk)
+    getCurrentTime :: tk (AU_TS (TK_ACC tk))
 
-    execSFStorageInstructions
-        :: SF_TS tk
-        -> [SFStorageInstruction (SF_LQ tk) (SF_TS tk) (SF_RTB tk) (SF_ADDR tk)]
-        -> tk ()
+    execSFStorageInstructions :: AU_TS (TK_ACC tk) -> [AccountStorageInstruction (TK_ACC tk)] -> tk ()
 
     --
     -- Account operations
     --
-    getAccount :: SF_ADDR tk -> tk (SF_ACC tk)
+    getAccount :: ACC_ADDR (TK_ACC tk) -> tk (TK_ACC tk)
 
-    balanceOfAccount :: SF_ADDR tk -> tk (SF_RTB tk)
+    balanceOfAccount :: ACC_ADDR (TK_ACC tk) -> tk (AU_RTB (TK_ACC tk))
     balanceOfAccount addr = do
         t <- getCurrentTime
         account <- getAccount addr
@@ -134,7 +114,7 @@ class ( Monad tk
     --
     -- TBA functions
     --
-    mintLiquidity :: SF_ADDR tk -> SF_LQ tk -> tk ()
+    mintLiquidity :: ACC_ADDR (TK_ACC tk) -> AU_LQ (TK_ACC tk) -> tk ()
     mintLiquidity addr liquidity = do
         t <- getCurrentTime
         account <- getAccount addr
@@ -144,9 +124,9 @@ class ( Monad tk
     --
     -- CFA functions
     --
-    getFlow :: SF_ADDR tk -> SF_ADDR tk -> tk (CFA.CFAContractData (SF_LQ tk) (SF_TS tk) (SF_RTB tk))
+    getFlow :: ACC_ADDR (TK_ACC tk) -> ACC_ADDR (TK_ACC tk) -> tk (CFA.CFAContractData (TK_ACC tk))
 
-    updateFlow :: SF_ADDR tk -> SF_ADDR tk -> SF_LQ tk -> tk ()
+    updateFlow :: ACC_ADDR (TK_ACC tk) -> ACC_ADDR (TK_ACC tk) -> AU_LQ (TK_ACC tk) -> tk ()
     updateFlow senderAddr receiverAddr newFlowRate = do
         t <- getCurrentTime
         senderAccount <- getAccount senderAddr

@@ -11,27 +11,26 @@ module Superfluid.Concepts.Agreement
 
 import           Data.Default
 
-import           Superfluid.Concepts.SuperfluidTypes (Liquidity, RealtimeBalance, Timestamp)
+import           Superfluid.Concepts.AccountingUnit (AccountingUnit (..))
+
 
 -- ============================================================================
 -- | AgreementContractData type class
 --
 -- Naming conventions:
 --  * Type name: acd
-class (Liquidity lq, RealtimeBalance rtb lq, Timestamp ts, Default acd, Show acd)
-    => AgreementContractData acd lq ts rtb
-    | acd -> lq, acd -> ts, acd -> rtb where
+class (Default acd, Show acd, AccountingUnit au)
+    => AgreementContractData acd au | acd -> au where
 
 -- ============================================================================
 -- | AgreementAccountData type class
 --
 -- Naming conventions:
 --  - Type name: aad
-class (Liquidity lq, RealtimeBalance rtb lq, Timestamp ts, Default aad, Show aad)
-    => AgreementAccountData aad lq ts rtb
-    | aad -> lq, aad -> ts, aad -> rtb where
+class (Default aad, Show aad, AccountingUnit au)
+    => AgreementAccountData aad au | aad -> au where
 
-    providedBalanceOfAgreement :: aad -> ts -> rtb
+    providedBalanceOfAgreement :: aad -> AU_TS au -> AU_RTB au
 
 -- ============================================================================
 -- | AnyAgreementAccountData type
@@ -45,13 +44,13 @@ class (Liquidity lq, RealtimeBalance rtb lq, Timestamp ts, Default aad, Show aad
 --   See: https://wiki.haskell.org/Heterogenous_collections
 -- - MkAgreementAccountData is the constructor
 -- - providedBalanceOfAnyAgreement is convenience wrapper of providedBalanceOfAgreement
-data AnyAgreementAccountData lq ts rtb where
+data AnyAgreementAccountData au where
     MkAgreementAccountData
-        :: (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq, AgreementAccountData aad lq ts rtb)
-        => aad -> AnyAgreementAccountData lq ts rtb
+        :: (AccountingUnit au, AgreementAccountData aad au)
+        => aad -> AnyAgreementAccountData au
 
 -- | providedBalanceOfAgreement wrapper for AnyAgreementAccountData
 providedBalanceOfAnyAgreement
-    :: (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-    => AnyAgreementAccountData lq ts rtb -> ts -> rtb
+    :: AccountingUnit au
+    => AnyAgreementAccountData au -> AU_TS au -> AU_RTB au
 providedBalanceOfAnyAgreement (MkAgreementAccountData g) = providedBalanceOfAgreement g

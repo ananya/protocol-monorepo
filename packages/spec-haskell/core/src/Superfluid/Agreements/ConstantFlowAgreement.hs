@@ -11,77 +11,62 @@ module Superfluid.Agreements.ConstantFlowAgreement
 import           Data.Default
 import           Text.Printf
 
+import           Superfluid.Concepts.AccountingUnit  (AccountingUnit (..))
 import           Superfluid.Concepts.Agreement       (AgreementAccountData (..), AgreementContractData)
-import           Superfluid.Concepts.SuperfluidTypes
-    ( Liquidity
-    , RealtimeBalance
-    , Timestamp
-    , integralToLiquidity
-    , liquidityToRTB
-    )
+import           Superfluid.Concepts.BaseTypes       (integralToLiquidity)
+import           Superfluid.Concepts.RealtimeBalance (liquidityToRTB)
 
 
 -- ============================================================================
 -- | CFAContractData Type
 --
-data (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-    => CFAContractData lq ts rtb = CFAContractData
-    { flowLastUpdatedAt :: ts
-    , flowRate          :: lq
+data AccountingUnit au => CFAContractData au = CFAContractData
+    { flowLastUpdatedAt :: AU_TS au
+    , flowRate          :: AU_LQ au
     }
 
-instance (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-    => Default (CFAContractData lq ts rtb) where
+instance AccountingUnit au => Default (CFAContractData au) where
     def = CFAContractData { flowLastUpdatedAt = def, flowRate = def }
 
-instance (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-    => Show (CFAContractData lq ts rtb) where
+instance AccountingUnit au => Show (CFAContractData au) where
     show x = printf "{ flowLastUpdatedAt = %s, flowRate = %s }"
         (show $ flowLastUpdatedAt x) (show $ flowRate x)
 
-instance (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-    => AgreementContractData (CFAContractData lq ts rtb) lq ts rtb
+instance AccountingUnit au => AgreementContractData (CFAContractData au) au
 
 -- ============================================================================
 -- | CFAAccountData Type (is AgreementAccountData)
 --
-data (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-    => CFAAccountData lq ts rtb = CFAAccountData
-    { settledAt      :: ts
-    , settledBalance :: lq
-    , netFlowRate    :: lq
+data AccountingUnit au => CFAAccountData au = CFAAccountData
+    { settledAt      :: AU_TS au
+    , settledBalance :: AU_LQ au
+    , netFlowRate    :: AU_LQ au
     }
 
-instance (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-    => Default (CFAAccountData lq ts rtb) where
+instance AccountingUnit au => Default (CFAAccountData au) where
     def = CFAAccountData { settledAt = def, settledBalance = def, netFlowRate = def }
 
-instance (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-    => AgreementAccountData (CFAAccountData lq ts rtb) lq ts rtb where
+instance AccountingUnit au => AgreementAccountData (CFAAccountData au) au where
     providedBalanceOfAgreement CFAAccountData { netFlowRate = r, settledBalance = b_s, settledAt = t_s } t =
         liquidityToRTB $ integralToLiquidity(t - t_s) * r + b_s
 
-instance (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-    => Show (CFAAccountData lq ts rtb) where
+instance AccountingUnit au => Show (CFAAccountData au) where
     show x = printf "{ settledAt = %s, settledBalance = %s, netFlowRate = %s }"
         (show $ settledAt x) (show $ settledBalance x) (show $ netFlowRate x)
 
 -- ============================================================================
 -- CFA Operations
 --
-getNetFlowRate
-    :: (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
-    => CFAAccountData lq ts rtb -> lq
+getNetFlowRate :: AccountingUnit au => CFAAccountData au -> AU_LQ au
 getNetFlowRate = netFlowRate
 
-updateFlow
-    :: (Liquidity lq, Timestamp ts, RealtimeBalance rtb lq)
+updateFlow :: AccountingUnit au
     -- (cfaACD, senderAAD, receiverAAD)
-    => (CFAContractData lq ts rtb, CFAAccountData lq ts rtb, CFAAccountData lq ts rtb)
+    => (CFAContractData au, CFAAccountData au, CFAAccountData au)
     -- newFlowRate, t
-    -> lq -> ts
+    -> AU_LQ au -> AU_TS au
     -- (cfaACD', senderAAD', receiverAAD')
-    -> (CFAContractData lq ts rtb, CFAAccountData lq ts rtb, CFAAccountData lq ts rtb)
+    -> (CFAContractData au, CFAAccountData au, CFAAccountData au)
 updateFlow (cfaACD, senderAAD, receiverAAD) newFlowRate t =
     ( CFAContractData
         { flowLastUpdatedAt = t
