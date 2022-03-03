@@ -14,10 +14,11 @@ Development
 
 **Prerequisite**
 
--   Ubuntu `build-essential` (or equivalents in other OSes)
--   `node` (for `npx` command and TDD environment)
--   `GHC` >= 8.6.0
--   [Cabal-install](https://www.haskell.org/cabal/download.html) >= 3.6.0.0
+- Ubuntu `build-essential` (or equivalents in other OSes)
+- `node` (for `npx` command and TDD environment)
+- `GHC` >= 9.0.0
+- [Cabal-install](https://www.haskell.org/cabal/download.html) >= 3.6.0.0
+- It is recommended to use [GHCup](https://www.haskell.org/ghcup/) to setup `GHC` and `Cabal-install`
 
 **TDD Environment**
 

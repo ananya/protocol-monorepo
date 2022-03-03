@@ -2,7 +2,6 @@ cabal-version:      3.0
 name:               superfluid-protocol-validator
 version:            0.0.1.0
 license:            MIT
-license-file:       LICENSE
 maintainer:         miao@superfluid.finance
 author:             Miao ZhiCheng
 homepage:           https://www.superfluid.finance/
@@ -38,7 +37,8 @@ test-suite test
         Superfluid.System_Test
 
     default-language: Haskell2010
-    ghc-options:      -Wall
+    ghc-options: -Wall
+                 -Wno-incomplete-uni-patterns
     build-depends:
                   base >=4.12,
                   HUnit >= 1.6.2.0,

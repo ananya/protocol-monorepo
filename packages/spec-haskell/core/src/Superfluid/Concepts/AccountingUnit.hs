@@ -5,6 +5,8 @@ module Superfluid.Concepts.AccountingUnit
     ( AccountingUnit (..)
     ) where
 
+import           Data.Kind                           (Type)
+
 import           Superfluid.Concepts.BaseTypes
 import           Superfluid.Concepts.RealtimeBalance
 
@@ -17,6 +19,6 @@ class ( Liquidity (AU_LQ au)
       , Timestamp (AU_TS au)
       , RealtimeBalance (AU_RTB au) (AU_LQ au)
       ) => AccountingUnit au where
-    type AU_LQ au :: *
-    type AU_TS au :: *
-    type AU_RTB au :: *
+    type AU_LQ au :: Type
+    type AU_TS au :: Type
+    type AU_RTB au :: Type

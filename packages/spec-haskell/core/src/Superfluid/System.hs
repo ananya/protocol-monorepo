@@ -12,8 +12,8 @@ module Superfluid.System
     , SuperfluidToken (..)
     ) where
 
-import           Control.Monad                                      (Monad)
 import           Data.Default
+import           Data.Kind                                          (Type)
 
 import           Superfluid.Concepts.AccountingUnit                 (AccountingUnit (..))
 import           Superfluid.Concepts.Agreement
@@ -42,7 +42,7 @@ class (Eq addr, Show addr) => Address addr
 --   * Term name: *Account
 class (AccountingUnit acc) => Account acc where
 
-    type ACC_ADDR acc :: *
+    type ACC_ADDR acc :: Type
 
     getTBAAccountData :: acc -> TBA.TBAAccountData acc
 
@@ -89,9 +89,9 @@ data AccountStorageInstruction acc where
 --   * and agreement (TBA/CFA/GDA) operations.
 -- * Instructions for write operations are executed in `execSFStorageInstructions`.
 --
-class ( Monad tk , Account (TK_ACC tk) ) => SuperfluidToken tk where
+class (Monad tk , Account (TK_ACC tk)) => SuperfluidToken tk where
 
-    type TK_ACC tk :: *
+    type TK_ACC tk :: Type
 
     --
     -- System operations

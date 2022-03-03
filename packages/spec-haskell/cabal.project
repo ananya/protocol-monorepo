@@ -3,9 +3,4 @@ packages:
     simple/superfluid-protocol-simple.cabal
     validator/superfluid-protocol-validator.cabal
 
--- with-compiler: /opt/ghc/8.0.1/bin/ghc
-
--- package cryptohash
---    optimization: False
-
 tests: True
