@@ -1,9 +1,9 @@
-CABAL ?= cabal
+CABAL ?= cabal --builddir=dist
 TEST_TARGET ?= test-suite
 
 default: build
 
-.PHONY: build
+.PHONY: default
 
 prepare:
 	$(CABAL) v2-update
@@ -19,10 +19,10 @@ clean:
 .PHONY: build clean
 
 test-suite:
-	$(CABAL) v2-test superfluid-protocol-validator
+	$(CABAL) v2-test superfluid-protocol-spec-validator
 
 test-demo:
-	$(CABAL) v2-exec -- superfluid-protocol-validator --demo
+	$(CABAL) v2-exec -- superfluid-protocol-spec-validator --demo
 
 test: $(TEST_TARGET)
 

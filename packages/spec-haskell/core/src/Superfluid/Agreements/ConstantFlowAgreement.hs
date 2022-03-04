@@ -12,7 +12,8 @@ import           Data.Default
 import           Text.Printf
 
 import           Superfluid.Concepts.AccountingUnit  (AccountingUnit (..))
-import           Superfluid.Concepts.Agreement       (AgreementAccountData (..), AgreementContractData)
+import           Superfluid.Concepts.Agreement       (AgreementAccountData (..),
+                                                      AgreementContractData)
 import           Superfluid.Concepts.BaseTypes       (integralToLiquidity)
 import           Superfluid.Concepts.RealtimeBalance (liquidityToRTB)
 

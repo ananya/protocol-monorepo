@@ -1,17 +1,17 @@
 cabal-version:      3.0
-name:               superfluid-protocol-validator
+name:               superfluid-protocol-spec-validator
 version:            0.0.1.0
 license:            MIT
 maintainer:         miao@superfluid.finance
 author:             Miao ZhiCheng
 homepage:           https://www.superfluid.finance/
-synopsis:           Superfluid protocol specifications in Haskell
+synopsis:           Superfluid protocol specifications validator
 category:           Money
 build-type:         Simple
 extra-source-files: CHANGELOG.md
 
 
-executable superfluid-protocol-validator
+executable superfluid-protocol-spec-validator
     main-is:          Superfluid/Validator/Main.hs
     hs-source-dirs:   src
     other-modules:
@@ -21,12 +21,12 @@ executable superfluid-protocol-validator
     default-language: Haskell2010
     ghc-options:      -Wall
     build-depends:
-                  base >=4.12,
-                  containers,
-                  data-default,
-                  time,
-                  transformers,
-                  superfluid-protocol-simple >= 0.0.1.0
+        base >=4.12,
+        containers,
+        data-default,
+        time,
+        transformers,
+        superfluid-protocol-spec-simple >= 0.0.1.0
 
 test-suite test
     type:             exitcode-stdio-1.0
@@ -37,12 +37,13 @@ test-suite test
         Superfluid.System_Test
 
     default-language: Haskell2010
-    ghc-options: -Wall
-                 -Wno-incomplete-uni-patterns
+    ghc-options:
+        -Wall
+        -Wno-incomplete-uni-patterns
     build-depends:
-                  base >=4.12,
-                  HUnit >= 1.6.2.0,
-                  data-default,
-                  transformers,
-                  superfluid-protocol-spec >= 0.0.1.0,
-                  superfluid-protocol-simple >= 0.0.1.0
+        base >=4.12,
+        HUnit >= 1.6.2.0,
+        data-default,
+        transformers,
+        superfluid-protocol-spec-core >= 0.0.1.0,
+        superfluid-protocol-spec-simple >= 0.0.1.0
