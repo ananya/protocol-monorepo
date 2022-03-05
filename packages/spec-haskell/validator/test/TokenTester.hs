@@ -4,10 +4,12 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Trans.State
 import           Data.Default
 import           Data.Maybe
+import           GHC.Stack
 import           Test.HUnit
 
-import qualified Superfluid.Agreements.ConstantFlowAgreement as CFA
 import qualified Superfluid.Concepts.RealtimeBalance         as RTB
+--
+import qualified Superfluid.Agreements.ConstantFlowAgreement as CFA
 
 import qualified Superfluid.Instances.Simple.System          as SF
 
@@ -55,17 +57,17 @@ createTokenTestCase (TokenTestCase spec runner) = TestLabel (testLabel spec) $ T
 -- ============================================================================
 -- | TokenTester Operations
 --
-timeTravel :: SF.SimpleTimestamp -> TokenTester ()
+timeTravel :: HasCallStack => SF.SimpleTimestamp -> TokenTester ()
 timeTravel d = modify (\vs -> vs { sfSys = (sfSys vs) { SF.currentTime = (+ d) . SF.currentTime . sfSys $ vs } })
 
-runToken :: TokenMonad a -> TokenTester a
+runToken :: HasCallStack => TokenMonad a -> TokenTester a
 runToken m = do
     s <- get
     (a, token') <- liftIO $ SF.runSimpleTokenStateT m (sfSys s) (token s)
     modify (\vs -> vs { token = token' })
     return a
 
-createTestAccount :: SF.SimpleAddress -> SF.Wad -> TokenTester ()
+createTestAccount :: HasCallStack => SF.SimpleAddress -> SF.Wad -> TokenTester ()
 createTestAccount addr initBalance = runToken $ do
     SF.mintLiquidity addr initBalance
     acc <- SF.getAccount addr
@@ -74,18 +76,18 @@ createTestAccount addr initBalance = runToken $ do
 -- ============================================================================
 -- | TokenTester Assertions
 --
-expectAccountBalanceTo :: String -> SF.SimpleAddress -> (SF.Wad -> Bool) -> TokenTester ()
+expectAccountBalanceTo :: HasCallStack => String -> SF.SimpleAddress -> (SF.Wad -> Bool) -> TokenTester ()
 expectAccountBalanceTo label addr expr = do
     balance <- runToken $ SF.balanceOfAccount addr
-    liftIO $ assertBool label (expr . RTB.liquidityFromRTB $ balance)
+    liftIO $ assertBool label (expr . RTB.liquidityRequiredForRTB $ balance)
 
-expeceTotalBalanceTo :: String -> (SF.Wad -> Bool) -> TokenTester ()
+expeceTotalBalanceTo :: HasCallStack => String -> (SF.Wad -> Bool) -> TokenTester ()
 expeceTotalBalanceTo label expr = do
     t <- runToken $ SF.getCurrentTime
     accounts <- runToken $ SF.listAccounts
-    liftIO $ assertBool label (expr . RTB.availableBalance $ SF.sumAccounts (map snd accounts) t)
+    liftIO $ assertBool label (expr . RTB.liquidityRequiredForRTB $ SF.sumAccounts (map snd accounts) t)
 
-expectCFANetFlowRateTo :: String -> SF.SimpleAddress -> (SF.Wad -> Bool) -> TokenTester ()
+expectCFANetFlowRateTo :: HasCallStack => String -> SF.SimpleAddress -> (SF.Wad -> Bool) -> TokenTester ()
 expectCFANetFlowRateTo label addr expr = do
     account <- runToken $ SF.getAccount addr
-    liftIO $ assertBool label (expr . CFA.getNetFlowRate . SF.getCFAAccountData $ account)
+    liftIO $ assertBool label (expr . CFA.netFlowRate . SF.getCFAAccountData $ account)

@@ -48,9 +48,7 @@ import           Superfluid.Instances.Simple.SuperfluidTypes
 --
 -- Note: It must consist of only alphabetical letters
 --
-newtype SimpleAddress = SimpleAddress String deriving (Eq, Ord, Show)
-
-instance SF.Address SimpleAddress
+newtype SimpleAddress = SimpleAddress String deriving (Eq, Ord, Show, SF.Address)
 
 -- SimpleAddress public constructor
 createSimpleAddress :: String -> Maybe SimpleAddress
@@ -169,7 +167,6 @@ _putSimpleTokenData = SimpleTokenStateT . put
 _modifySimpleTokenData :: (Monad m) => (SimpleTokenData -> SimpleTokenData) -> SimpleTokenStateT m ()
 _modifySimpleTokenData = SimpleTokenStateT . modify
 
-
 -- | SimpleTokenStateT m is a SuperfluidToken instance
 --
 instance (Monad m) => SF.SuperfluidToken (SimpleTokenStateT m) where
@@ -208,6 +205,8 @@ instance (Monad m) => SF.SuperfluidToken (SimpleTokenStateT m) where
         case M.lookup a (accounts s) of
             Just value -> value
             Nothing    -> _createSimpleAccount a 0
+
+    calcFlowBuffer = return . (* (Wad 3600))
 
     getFlow a b = getSimpleTokenData >>= \s -> return $
         case M.lookup (show(a)++":"++show(b)) (cfaAgreements s) of

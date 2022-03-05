@@ -20,7 +20,6 @@ import           Superfluid.Concepts.Agreement
     ( AnyAgreementAccountData
     , providedBalanceOfAnyAgreement
     )
-import           Superfluid.Concepts.RealtimeBalance                (liquidityToRTB)
 --
 import qualified Superfluid.Agreements.ConstantFlowAgreement        as CFA
 import qualified Superfluid.Agreements.TransferableBalanceAgreement as TBA
@@ -57,7 +56,7 @@ class (AccountingUnit acc) => Account acc where
 balanceOfAccountAt :: Account acc => acc -> AU_TS acc -> AU_RTB acc
 balanceOfAccountAt holderAccount t = foldr
     (+)
-    (liquidityToRTB . fromInteger $ 0)
+    def
     (map (flip providedBalanceOfAnyAgreement t) (agreementsOfAccount holderAccount))
 
 sumAccounts :: Account acc => [acc] -> AU_TS acc -> AU_RTB acc
@@ -126,15 +125,18 @@ class (Monad tk , Account (TK_ACC tk)) => SuperfluidToken tk where
     --
     getFlow :: ACC_ADDR (TK_ACC tk) -> ACC_ADDR (TK_ACC tk) -> tk (CFA.CFAContractData (TK_ACC tk))
 
+    calcFlowBuffer :: AU_LQ (TK_ACC tk) -> tk (AU_LQ (TK_ACC tk))
+
     updateFlow :: ACC_ADDR (TK_ACC tk) -> ACC_ADDR (TK_ACC tk) -> AU_LQ (TK_ACC tk) -> tk ()
     updateFlow senderAddr receiverAddr newFlowRate = do
         t <- getCurrentTime
         senderAccount <- getAccount senderAddr
         receiverAccount <- getAccount receiverAddr
         flowACD <- getFlow senderAddr receiverAddr
+        flowBuffer <- calcFlowBuffer newFlowRate
         let (flowACD', senderFlowAAD', receiverFlowAAD') = CFA.updateFlow
                 (flowACD, (getCFAAccountData senderAccount), (getCFAAccountData receiverAccount))
-                newFlowRate t
+                newFlowRate flowBuffer t
         execSFStorageInstructions t
             [ UpdateFlow (senderAddr, receiverAddr, flowACD')
             , UpdateAccountFlow (senderAddr, senderFlowAAD')

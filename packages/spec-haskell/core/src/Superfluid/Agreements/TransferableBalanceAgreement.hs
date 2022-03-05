@@ -13,7 +13,7 @@ import           Text.Printf
 
 import           Superfluid.Concepts.AccountingUnit  (AccountingUnit (..))
 import           Superfluid.Concepts.Agreement       (AgreementAccountData (..))
-import           Superfluid.Concepts.RealtimeBalance (liquidityToRTB)
+import           Superfluid.Concepts.RealtimeBalance (untappedLiquidityToRTB)
 
 
 -- ============================================================================
@@ -28,7 +28,7 @@ instance AccountingUnit au => Default (TBAAccountData au) where
     def = TBAAccountData { settledAt = def, liquidity = def }
 
 instance AccountingUnit au => AgreementAccountData (TBAAccountData au) au where
-    providedBalanceOfAgreement a _ = liquidityToRTB $ liquidity a
+    providedBalanceOfAgreement a _ = untappedLiquidityToRTB $ liquidity a
 
 instance AccountingUnit au => Show (TBAAccountData au) where
     show x = printf "{ settledAt = %s, liquidity = %s }" (show $ settledAt x) (show $ liquidity x)

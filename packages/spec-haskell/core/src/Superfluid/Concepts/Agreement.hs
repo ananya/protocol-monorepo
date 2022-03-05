@@ -36,7 +36,7 @@ class (Default aad, Show aad, AccountingUnit au)
 -- | AnyAgreementAccountData type
 --
 -- Naming conventions:
---  - Type name: aad
+--  - Type name: aaad
 --  - Term name: anyAgreement
 --
 -- Notes:

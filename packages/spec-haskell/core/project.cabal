@@ -16,6 +16,7 @@ library
         Superfluid.Concepts.RealtimeBalance
         Superfluid.Concepts.AccountingUnit
         Superfluid.Concepts.Agreement
+        Superfluid.SubSystems.BufferBasedSolvency
         Superfluid.Agreements.TransferableBalanceAgreement
         Superfluid.Agreements.ConstantFlowAgreement
         Superfluid.System
