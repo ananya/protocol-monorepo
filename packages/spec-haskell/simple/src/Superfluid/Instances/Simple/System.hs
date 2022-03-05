@@ -38,6 +38,7 @@ import           Superfluid.Concepts.Agreement                      (AnyAgreemen
 --
 import qualified Superfluid.Agreements.ConstantFlowAgreement        as CFA
 import qualified Superfluid.Agreements.TransferableBalanceAgreement as TBA
+--
 import qualified Superfluid.System                                  as SF
 
 import           Superfluid.Instances.Simple.SuperfluidTypes
@@ -206,7 +207,7 @@ instance (Monad m) => SF.SuperfluidToken (SimpleTokenStateT m) where
             Just value -> value
             Nothing    -> _createSimpleAccount a 0
 
-    calcFlowBuffer = return . (* (Wad 3600))
+    calcFlowBuffer = return  . (* (Wad 3600))
 
     getFlow a b = getSimpleTokenData >>= \s -> return $
         case M.lookup (show(a)++":"++show(b)) (cfaAgreements s) of

@@ -23,6 +23,8 @@ import           Superfluid.Concepts.Agreement
 --
 import qualified Superfluid.Agreements.ConstantFlowAgreement        as CFA
 import qualified Superfluid.Agreements.TransferableBalanceAgreement as TBA
+--
+import qualified Superfluid.SubSystems.BufferBasedSolvency          as BBS
 
 
 -- | Address Type Class
@@ -133,10 +135,10 @@ class (Monad tk , Account (TK_ACC tk)) => SuperfluidToken tk where
         senderAccount <- getAccount senderAddr
         receiverAccount <- getAccount receiverAddr
         flowACD <- getFlow senderAddr receiverAddr
-        flowBuffer <- calcFlowBuffer newFlowRate
+        flowBuffer <-  calcFlowBuffer newFlowRate
         let (flowACD', senderFlowAAD', receiverFlowAAD') = CFA.updateFlow
                 (flowACD, (getCFAAccountData senderAccount), (getCFAAccountData receiverAccount))
-                newFlowRate flowBuffer t
+                newFlowRate (BBS.BufferLiquidity flowBuffer) t
         execSFStorageInstructions t
             [ UpdateFlow (senderAddr, receiverAddr, flowACD')
             , UpdateAccountFlow (senderAddr, senderFlowAAD')

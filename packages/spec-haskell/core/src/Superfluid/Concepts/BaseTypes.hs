@@ -5,6 +5,7 @@
 module Superfluid.Concepts.BaseTypes where
 
 import           Data.Default
+import           Data.Typeable
 
 -- | Liquidity Type Class
 --
@@ -13,9 +14,19 @@ import           Data.Default
 --  * Type family name: AU_LQ
 class (Default lq, Num lq, Ord lq, Show lq) => Liquidity lq
 
-type LiquidityType = Int
+-- | TappedLiquidity Type and Operations
+--
+-- Naming conventions:
+--  * Type name: tlq
+--  * Term name: tliq
+data Liquidity lq => TappedLiquidity lq = TappedLiquidity lq TypeRep
 
-data (Liquidity lq) => TappedLiquidity lq = TappedLiquidity lq LiquidityType
+isOfLiquidityType :: Liquidity lq => TypeRep -> TappedLiquidity lq -> Bool
+isOfLiquidityType liqt1 (TappedLiquidity _ liqt2) = liqt1 == liqt2
+
+getLiquidityOfType :: Liquidity lq => TypeRep -> TappedLiquidity lq -> lq
+getLiquidityOfType liqt1 (TappedLiquidity uliq liqt2) = if liqt1 == liqt2 then uliq else def
+
 
 -- | Timestamp Type Class
 --

@@ -5,8 +5,6 @@
 module Superfluid.Agreements.ConstantFlowAgreement
     ( CFAContractData (..)
     , CFAAccountData (..)
-    , mkBufferLiquidity
-    , getBufferLiquidity
     , updateFlow
     ) where
 import           Data.Default
@@ -15,7 +13,7 @@ import           Text.Printf
 import           Superfluid.Concepts.AccountingUnit        (AccountingUnit (..))
 import           Superfluid.Concepts.Agreement             (AgreementAccountData (..), AgreementContractData)
 import           Superfluid.Concepts.RealtimeBalance       (typedLiquidityVectorToRTB)
-import           Superfluid.SubSystems.BufferBasedSolvency
+import qualified Superfluid.SubSystems.BufferBasedSolvency as BBS
 
 
 -- ============================================================================
@@ -63,7 +61,7 @@ instance AccountingUnit au => AgreementAccountData (CFAAccountData au) au where
         } t =
         typedLiquidityVectorToRTB
             ((fromInteger.toInteger)(t - t_s) * r + uliq_s)
-            [ mkBufferLiquidity buf_s ]
+            [ BBS.mkTappedBufferLiquidity buf_s ]
 
 instance AccountingUnit au => Show (CFAAccountData au) where
     show x = printf "{ at = %s, uliq = %s, buf = %s net = %s }"
@@ -79,21 +77,22 @@ updateFlow :: AccountingUnit au
     -- (cfaACD, senderAAD, receiverAAD)
     => (CFAContractData au, CFAAccountData au, CFAAccountData au)
     -- newFlowRate, newFlowBuffer, t
-    -> AU_LQ au -> AU_LQ au -> AU_TS au
+    -> AU_LQ au -> BBS.BufferLiquidity (AU_LQ au) -> AU_TS au
     -- (cfaACD', senderAAD', receiverAAD')
     -> (CFAContractData au, CFAAccountData au, CFAAccountData au)
 updateFlow (cfaACD, senderAAD, receiverAAD) newFlowRate newFlowBuffer t =
     ( CFAContractData
         { flowLastUpdatedAt = t
         , flowRate = newFlowRate
-        , flowBuffer = newFlowBuffer
+        , flowBuffer = newFlowBuffer'
         }
     , updateFlowRate senderAAD (negate flowRateDelta) t
     , updateFlowRate receiverAAD flowRateDelta t
     )
     where
+    newFlowBuffer' = BBS.getBufferLiquidity newFlowBuffer
     flowRateDelta = newFlowRate - (flowRate cfaACD)
-    flowBufferDelta = newFlowBuffer - (flowBuffer cfaACD)
+    flowBufferDelta = newFlowBuffer' - (flowBuffer cfaACD)
     updateFlowRate CFAAccountData
         { netFlowRate = r
         , settledUntappedLiquidity = uliq_s

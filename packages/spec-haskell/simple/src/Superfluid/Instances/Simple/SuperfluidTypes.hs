@@ -1,7 +1,6 @@
 {-# LANGUAGE DerivingVia                #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TypeApplications           #-}
 
 module Superfluid.Instances.Simple.SuperfluidTypes
     ( Wad (..)
@@ -13,16 +12,16 @@ module Superfluid.Instances.Simple.SuperfluidTypes
     ) where
 
 import           Data.Default
-import           Text.Printf                                 (printf)
+import           Text.Printf                               (printf)
 
-import           Superfluid.Concepts.BaseTypes               (Liquidity, Timestamp)
+import           Superfluid.Concepts.BaseTypes             (Liquidity, Timestamp, getLiquidityOfType)
 import           Superfluid.Concepts.RealtimeBalance
     ( RealtimeBalance (..)
     , RealtimeBalanceAsNum (..)
     , liquidityRequiredForRTB
     )
 --
-import qualified Superfluid.Agreements.ConstantFlowAgreement as CFA
+import qualified Superfluid.SubSystems.BufferBasedSolvency as BBS
 
 -- ============================================================================
 -- Wad type:
@@ -74,7 +73,7 @@ instance RealtimeBalance SimpleRealtimeBalance Wad where
         then SimpleRealtimeBalance (vec!!0) (vec!!1) (vec!!2)
         else error "wrong balance vector"
     typedLiquidityVectorToRTB uliq tvec = SimpleRealtimeBalance uliq d od
-        where d = foldr (+) def $ map CFA.getBufferLiquidity tvec
+        where d = foldr (+) def $ map (getLiquidityOfType BBS.bufferLiquidityType) tvec
               od = def
 
 instance Show SimpleRealtimeBalance where
