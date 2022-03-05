@@ -12,7 +12,7 @@ extra-source-files: CHANGELOG.md
 
 library
     exposed-modules:
-        Money.Superfluid.Concepts.BaseTypes
+        Money.Superfluid.Concepts.Liquidity
         Money.Superfluid.Concepts.RealtimeBalance
         Money.Superfluid.Concepts.AccountingUnit
         Money.Superfluid.Concepts.Agreement

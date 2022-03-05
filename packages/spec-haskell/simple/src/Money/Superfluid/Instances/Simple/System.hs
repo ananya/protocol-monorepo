@@ -51,7 +51,10 @@ import           Money.Superfluid.Instances.Simple.SuperfluidTypes
 --
 -- Note: It must consist of only alphabetical letters
 --
-newtype SimpleAddress = SimpleAddress String deriving (Eq, Ord, Show, SF.Address)
+newtype SimpleAddress = SimpleAddress String deriving (Eq, Ord, SF.Address)
+
+instance Show SimpleAddress where
+    show (SimpleAddress a) = a
 
 -- SimpleAddress public constructor
 createSimpleAddress :: String -> Maybe SimpleAddress

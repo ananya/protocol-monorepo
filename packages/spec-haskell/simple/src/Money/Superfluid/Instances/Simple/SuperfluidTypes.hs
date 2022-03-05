@@ -14,11 +14,12 @@ module Money.Superfluid.Instances.Simple.SuperfluidTypes
 import           Data.Default
 import           Text.Printf                                     (printf)
 
-import           Money.Superfluid.Concepts.BaseTypes             (Liquidity, Timestamp, getLiquidityOfType)
+import           Money.Superfluid.Concepts.Liquidity             (Liquidity, Timestamp, getLiquidityOfType)
 import           Money.Superfluid.Concepts.RealtimeBalance
-    ( RealtimeBalance (..)
+    ( LiquidityVector (..)
+    , RealtimeBalance (..)
     , RealtimeBalanceAsNum (..)
-    , liquidityRequiredForRTB
+    , RealtimeBalanceAsShow (..)
     )
 --
 import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
@@ -49,7 +50,8 @@ instance Show Wad where
 -- ============================================================================
 -- SimpleTimestamp Base Type
 --
-newtype SimpleTimestamp = SimpleTimestamp Int deriving (Enum, Eq, Ord, Num, Real, Integral, Default, Timestamp)
+newtype SimpleTimestamp = SimpleTimestamp Int
+    deriving (Enum, Eq, Ord, Num, Real, Integral, Default, Timestamp)
 
 instance Show SimpleTimestamp where
     show (SimpleTimestamp t) = show t
@@ -63,23 +65,25 @@ data SimpleRealtimeBalance = SimpleRealtimeBalance
     , owedDepositVal       :: Wad
     }
     deriving Num via RealtimeBalanceAsNum SimpleRealtimeBalance Wad
+    deriving Show via RealtimeBalanceAsShow SimpleRealtimeBalance Wad
 
 instance Default SimpleRealtimeBalance where
     def = SimpleRealtimeBalance { untappedLiquidityVal = def, depositVal = def, owedDepositVal = def }
 
 instance RealtimeBalance SimpleRealtimeBalance Wad where
-    liquidityVectorFromRTB rtb = map (flip id rtb) [untappedLiquidityVal, depositVal, owedDepositVal]
-    liquidityVectorToRTB vec = if length vec == 3
-        then SimpleRealtimeBalance (vec!!0) (vec!!1) (vec!!2)
-        else error "wrong balance vector"
-    typedLiquidityVectorToRTB uliq tvec = SimpleRealtimeBalance uliq d od
+    rawLiquidityVectorFromRTB rtb = map (flip id rtb) [untappedLiquidityVal, depositVal, owedDepositVal]
+
+    typedLiquidityVectorFromRTB rtb = TypedLiquidityVector
+        (untappedLiquidityVal rtb)
+        [ BBS.mkBufferTypedLiquidity $ depositVal rtb
+        ]
+
+    untappedLiquidityToRTB uliq = SimpleRealtimeBalance uliq def def
+
+    liquidityVectorToRTB (UntypedLiquidityVector uliq uvec) = if length uvec == 2
+        then SimpleRealtimeBalance uliq (uvec!!0) (uvec!!1)
+        else error "Wrong untyped liquidity vector length"
+    liquidityVectorToRTB (TypedLiquidityVector uliq tvec) = SimpleRealtimeBalance uliq d od
+        -- TODO: reduce it to a single loop
         where d = foldr (+) def $ map (getLiquidityOfType BBS.bufferLiquidityType) tvec
               od = def
-
-instance Show SimpleRealtimeBalance where
-    show rtb = (show . liquidityRequiredForRTB $ rtb) ++ (detail rtb) where
-        detail (SimpleRealtimeBalance uliq d od) = " ("
-            ++ show uliq ++ ", "
-            ++ show d ++ "@d, "
-            ++ show od ++ "@od"
-            ++ ")"

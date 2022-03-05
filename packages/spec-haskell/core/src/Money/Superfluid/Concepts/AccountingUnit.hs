@@ -7,7 +7,7 @@ module Money.Superfluid.Concepts.AccountingUnit
 
 import           Data.Kind                           (Type)
 
-import           Money.Superfluid.Concepts.BaseTypes
+import           Money.Superfluid.Concepts.Liquidity
 import           Money.Superfluid.Concepts.RealtimeBalance
 
 -- | AccountingUnit Type Class

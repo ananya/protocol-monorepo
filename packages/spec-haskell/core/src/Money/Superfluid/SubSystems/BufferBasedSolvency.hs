@@ -1,15 +1,20 @@
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeApplications           #-}
 
 module Money.Superfluid.SubSystems.BufferBasedSolvency where
 
+import           Data.Default
 import           Data.Typeable
 
-import           Money.Superfluid.Concepts.BaseTypes (Liquidity, TappedLiquidity (..))
+import           Money.Superfluid.Concepts.Liquidity (Liquidity, LiquidityType (..), TypedLiquidity (..))
 
-newtype Liquidity lq => BufferLiquidity lq = BufferLiquidity { getBufferLiquidity :: lq } deriving (Typeable)
+newtype Liquidity lq => BufferLiquidity lq = BufferLiquidity { getBufferLiquidity :: lq }
+    deriving (Typeable, Default)
+instance Liquidity lq => Show (BufferLiquidity lq) where
+    show = show . getBufferLiquidity
 
-bufferLiquidityType :: TypeRep
-bufferLiquidityType = typeRep (Proxy @BufferLiquidity)
+bufferLiquidityType :: LiquidityType
+bufferLiquidityType = LiquidityType (typeRep (Proxy @BufferLiquidity)) "d"
 
-mkTappedBufferLiquidity :: Liquidity lq => lq -> TappedLiquidity lq
-mkTappedBufferLiquidity uliq = TappedLiquidity uliq bufferLiquidityType
+mkBufferTypedLiquidity :: Liquidity lq => lq -> TypedLiquidity lq
+mkBufferTypedLiquidity liq = TappedLiquidity liq bufferLiquidityType

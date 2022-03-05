@@ -31,7 +31,7 @@ instance AccountingUnit au => AgreementAccountData (TBAAccountData au) au where
     providedBalanceOfAgreement a _ = untappedLiquidityToRTB $ liquidity a
 
 instance AccountingUnit au => Show (TBAAccountData au) where
-    show x = printf "{ settledAt = %s, liquidity = %s }" (show $ settledAt x) (show $ liquidity x)
+    show x = printf "{ t = %s, uliq = %s }" (show $ settledAt x) (show $ liquidity x)
 
 -- ============================================================================
 -- TBA Operations
