@@ -1,20 +1,19 @@
 cabal-version:      3.0
-name:               superfluid-protocol-spec-simple
+name:               superfluid-protocol-systems-simple
 version:            0.0.1.0
 license:            MIT
 maintainer:         miao@superfluid.finance
 author:             Miao ZhiCheng
 homepage:           https://www.superfluid.finance/
-synopsis:           Superfluid protocol simple system instance for the specifications
+synopsis:           Superfluid protocol simple system instances
 category:           Money
 build-type:         Simple
 extra-source-files: CHANGELOG.md
 
-
 library
     exposed-modules:
-        Superfluid.Instances.Simple.SuperfluidTypes
-        Superfluid.Instances.Simple.System
+        Money.Superfluid.Instances.Simple.SuperfluidTypes
+        Money.Superfluid.Instances.Simple.System
 
     hs-source-dirs:   src
     default-language: Haskell2010

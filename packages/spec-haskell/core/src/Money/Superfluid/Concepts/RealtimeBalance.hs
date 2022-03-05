@@ -2,7 +2,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
-module Superfluid.Concepts.RealtimeBalance
+module Money.Superfluid.Concepts.RealtimeBalance
     ( RealtimeBalance (..)
     , untappedLiquidityToRTB
     , untappedLiquidityFromRTB
@@ -12,7 +12,7 @@ module Superfluid.Concepts.RealtimeBalance
 
 import           Data.Default
 
-import           Superfluid.Concepts.BaseTypes (Liquidity, TappedLiquidity)
+import           Money.Superfluid.Concepts.BaseTypes (Liquidity, TappedLiquidity)
 
 
 -- | RealtimeBalance Type Class

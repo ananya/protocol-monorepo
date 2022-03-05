@@ -1,14 +1,14 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies     #-}
 
-module Superfluid.Concepts.AccountingUnit
+module Money.Superfluid.Concepts.AccountingUnit
     ( AccountingUnit (..)
     ) where
 
 import           Data.Kind                           (Type)
 
-import           Superfluid.Concepts.BaseTypes
-import           Superfluid.Concepts.RealtimeBalance
+import           Money.Superfluid.Concepts.BaseTypes
+import           Money.Superfluid.Concepts.RealtimeBalance
 
 -- | AccountingUnit Type Class
 --

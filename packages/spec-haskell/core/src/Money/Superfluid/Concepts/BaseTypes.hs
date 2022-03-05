@@ -2,7 +2,7 @@
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
-module Superfluid.Concepts.BaseTypes where
+module Money.Superfluid.Concepts.BaseTypes where
 
 import           Data.Default
 import           Data.Typeable

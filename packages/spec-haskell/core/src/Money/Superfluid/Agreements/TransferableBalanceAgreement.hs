@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Superfluid.Agreements.TransferableBalanceAgreement
+module Money.Superfluid.Agreements.TransferableBalanceAgreement
     ( TBAAccountData
     , mintLiquidity
     , burnLiquidity
@@ -11,9 +11,9 @@ module Superfluid.Agreements.TransferableBalanceAgreement
 import           Data.Default
 import           Text.Printf
 
-import           Superfluid.Concepts.AccountingUnit  (AccountingUnit (..))
-import           Superfluid.Concepts.Agreement       (AgreementAccountData (..))
-import           Superfluid.Concepts.RealtimeBalance (untappedLiquidityToRTB)
+import           Money.Superfluid.Concepts.AccountingUnit  (AccountingUnit (..))
+import           Money.Superfluid.Concepts.Agreement       (AgreementAccountData (..))
+import           Money.Superfluid.Concepts.RealtimeBalance (untappedLiquidityToRTB)
 
 
 -- ============================================================================

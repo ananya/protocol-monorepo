@@ -3,7 +3,7 @@
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE TypeFamilies           #-}
 
-module Superfluid.System
+module Money.Superfluid.System
     ( Address
     , Account (..)
     , balanceOfAccountAt
@@ -13,18 +13,18 @@ module Superfluid.System
     ) where
 
 import           Data.Default
-import           Data.Kind                                          (Type)
+import           Data.Kind                                                (Type)
 
-import           Superfluid.Concepts.AccountingUnit                 (AccountingUnit (..))
-import           Superfluid.Concepts.Agreement
+import           Money.Superfluid.Concepts.AccountingUnit                 (AccountingUnit (..))
+import           Money.Superfluid.Concepts.Agreement
     ( AnyAgreementAccountData
     , providedBalanceOfAnyAgreement
     )
 --
-import qualified Superfluid.Agreements.ConstantFlowAgreement        as CFA
-import qualified Superfluid.Agreements.TransferableBalanceAgreement as TBA
+import qualified Money.Superfluid.Agreements.ConstantFlowAgreement        as CFA
+import qualified Money.Superfluid.Agreements.TransferableBalanceAgreement as TBA
 --
-import qualified Superfluid.SubSystems.BufferBasedSolvency          as BBS
+import qualified Money.Superfluid.SubSystems.BufferBasedSolvency          as BBS
 
 
 -- | Address Type Class

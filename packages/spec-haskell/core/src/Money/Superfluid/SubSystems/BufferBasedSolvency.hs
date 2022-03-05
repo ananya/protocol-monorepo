@@ -1,10 +1,10 @@
 {-# LANGUAGE TypeApplications #-}
 
-module Superfluid.SubSystems.BufferBasedSolvency where
+module Money.Superfluid.SubSystems.BufferBasedSolvency where
 
 import           Data.Typeable
 
-import           Superfluid.Concepts.BaseTypes (Liquidity, TappedLiquidity (..))
+import           Money.Superfluid.Concepts.BaseTypes (Liquidity, TappedLiquidity (..))
 
 newtype Liquidity lq => BufferLiquidity lq = BufferLiquidity { getBufferLiquidity :: lq } deriving (Typeable)
 

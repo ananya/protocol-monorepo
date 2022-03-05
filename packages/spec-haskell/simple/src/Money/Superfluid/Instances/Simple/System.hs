@@ -1,8 +1,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module Superfluid.Instances.Simple.System
-    ( module Superfluid.Instances.Simple.SuperfluidTypes
+module Money.Superfluid.Instances.Simple.System
+    ( module Money.Superfluid.Instances.Simple.SuperfluidTypes
     -- SimpleAddress
     , SimpleAddress
     , createSimpleAddress
@@ -31,17 +31,19 @@ import           Control.Monad.Trans.Reader
 import           Control.Monad.Trans.State
 import           Data.Char
 import           Data.Default
-import qualified Data.Map                                           as M
+import qualified Data.Map                                                 as M
 
-import           Superfluid.Concepts.AccountingUnit                 (AccountingUnit (..))
-import           Superfluid.Concepts.Agreement                      (AnyAgreementAccountData (MkAgreementAccountData))
+import           Money.Superfluid.Concepts.AccountingUnit                 (AccountingUnit (..))
+import           Money.Superfluid.Concepts.Agreement
+    ( AnyAgreementAccountData (MkAgreementAccountData)
+    )
 --
-import qualified Superfluid.Agreements.ConstantFlowAgreement        as CFA
-import qualified Superfluid.Agreements.TransferableBalanceAgreement as TBA
+import qualified Money.Superfluid.Agreements.ConstantFlowAgreement        as CFA
+import qualified Money.Superfluid.Agreements.TransferableBalanceAgreement as TBA
 --
-import qualified Superfluid.System                                  as SF
+import qualified Money.Superfluid.System                                  as SF
 
-import           Superfluid.Instances.Simple.SuperfluidTypes
+import           Money.Superfluid.Instances.Simple.SuperfluidTypes
 
 
 -- ============================================================================

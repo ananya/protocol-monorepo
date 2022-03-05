@@ -2,7 +2,7 @@
 {-# LANGUAGE GADTs                  #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
-module Superfluid.Concepts.Agreement
+module Money.Superfluid.Concepts.Agreement
     ( AgreementContractData
     , AgreementAccountData (..)
     , AnyAgreementAccountData (MkAgreementAccountData)
@@ -11,7 +11,7 @@ module Superfluid.Concepts.Agreement
 
 import           Data.Default
 
-import           Superfluid.Concepts.AccountingUnit (AccountingUnit (..))
+import           Money.Superfluid.Concepts.AccountingUnit (AccountingUnit (..))
 
 
 -- ============================================================================

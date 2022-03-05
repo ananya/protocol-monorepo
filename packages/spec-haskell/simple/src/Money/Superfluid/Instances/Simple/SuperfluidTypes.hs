@@ -2,7 +2,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 
-module Superfluid.Instances.Simple.SuperfluidTypes
+module Money.Superfluid.Instances.Simple.SuperfluidTypes
     ( Wad (..)
     , toWad
     , wad4humanN
@@ -12,16 +12,16 @@ module Superfluid.Instances.Simple.SuperfluidTypes
     ) where
 
 import           Data.Default
-import           Text.Printf                               (printf)
+import           Text.Printf                                     (printf)
 
-import           Superfluid.Concepts.BaseTypes             (Liquidity, Timestamp, getLiquidityOfType)
-import           Superfluid.Concepts.RealtimeBalance
+import           Money.Superfluid.Concepts.BaseTypes             (Liquidity, Timestamp, getLiquidityOfType)
+import           Money.Superfluid.Concepts.RealtimeBalance
     ( RealtimeBalance (..)
     , RealtimeBalanceAsNum (..)
     , liquidityRequiredForRTB
     )
 --
-import qualified Superfluid.SubSystems.BufferBasedSolvency as BBS
+import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
 
 -- ============================================================================
 -- Wad type:

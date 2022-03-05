@@ -1,13 +1,13 @@
-module Superfluid.Validator.Demo (demo) where
+module Money.Superfluid.Validator.Demo (demo) where
 
 import           Control.Monad.IO.Class
 import           Data.Maybe
-import           Data.Time.Clock.POSIX              (getPOSIXTime)
+import           Data.Time.Clock.POSIX                    (getPOSIXTime)
 import           GHC.Stack
 
-import qualified Superfluid.Instances.Simple.System as SF
+import qualified Money.Superfluid.Instances.Simple.System as SF
 
-import           Superfluid.Validator.Simulation
+import           Money.Superfluid.Validator.Simulation
 
 
 now :: IO SF.SimpleTimestamp

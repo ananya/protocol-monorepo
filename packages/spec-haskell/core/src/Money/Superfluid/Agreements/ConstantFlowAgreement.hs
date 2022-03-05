@@ -2,7 +2,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 
-module Superfluid.Agreements.ConstantFlowAgreement
+module Money.Superfluid.Agreements.ConstantFlowAgreement
     ( CFAContractData (..)
     , CFAAccountData (..)
     , updateFlow
@@ -10,10 +10,10 @@ module Superfluid.Agreements.ConstantFlowAgreement
 import           Data.Default
 import           Text.Printf
 
-import           Superfluid.Concepts.AccountingUnit        (AccountingUnit (..))
-import           Superfluid.Concepts.Agreement             (AgreementAccountData (..), AgreementContractData)
-import           Superfluid.Concepts.RealtimeBalance       (typedLiquidityVectorToRTB)
-import qualified Superfluid.SubSystems.BufferBasedSolvency as BBS
+import           Money.Superfluid.Concepts.AccountingUnit        (AccountingUnit (..))
+import           Money.Superfluid.Concepts.Agreement             (AgreementAccountData (..), AgreementContractData)
+import           Money.Superfluid.Concepts.RealtimeBalance       (typedLiquidityVectorToRTB)
+import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
 
 
 -- ============================================================================

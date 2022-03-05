@@ -1,11 +1,11 @@
-module Superfluid.System_Test where
+module Money.Superfluid.System_Test where
 
 import           Control.Monad.IO.Class
 import           Test.HUnit
 
-import qualified Superfluid.Instances.Simple.System as SF
-
-import           TokenTester
+import qualified Money.Superfluid.Instances.Simple.System as SF
+--
+import           Money.Superfluid.TokenTester
 
 
 simple1to1ScenarioTest :: TokenTestCase
