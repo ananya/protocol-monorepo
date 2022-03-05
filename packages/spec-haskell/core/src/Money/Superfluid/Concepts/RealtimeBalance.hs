@@ -41,9 +41,6 @@ class (Liquidity lq, Num rtb, Default rtb) => RealtimeBalance rtb lq | rtb -> lq
     typedLiquidityVectorToRTB :: TypedLiquidityVector lq -> rtb
     untypedLiquidityVectorToRTB :: UntypedLiquidityVector lq -> rtb
 
--- untypedLiquidityVectorFromRTB :: (Liquidity lq, RealtimeBalance rtb lq) => rtb -> UntypedLiquidityVector lq
--- untypedLiquidityVectorFromRTB = _mkUntypedLiquidityVector . rawLiquidityVectorFromRTB
-
 -- | Get untapped liquidity component of the Realtme balance vector
 untappedLiquidityFromRTB :: (Liquidity lq, RealtimeBalance rtb lq) => rtb -> lq
 untappedLiquidityFromRTB = _getUntappedLiquidity . _mkUntypedLiquidityVector . rawLiquidityVectorFromRTB

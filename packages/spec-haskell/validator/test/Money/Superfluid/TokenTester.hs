@@ -90,4 +90,4 @@ expeceTotalBalanceTo label expr = do
 expectCFANetFlowRateTo :: HasCallStack => String -> SF.SimpleAddress -> (SF.Wad -> Bool) -> TokenTester ()
 expectCFANetFlowRateTo label addr expr = do
     account <- runToken $ SF.getAccount addr
-    liftIO $ assertBool label (expr . CFA.netFlowRate . SF.getCFAAccountData $ account)
+    liftIO $ assertBool label (expr . SF.liquidityTimesTimeUnit . CFA.netFlowRate . SF.getCFAAccountData $ account)

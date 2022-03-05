@@ -1,6 +1,6 @@
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE FunctionalDependencies     #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
 
 module Money.Superfluid.Concepts.Liquidity where
 
@@ -24,7 +24,7 @@ import           Data.Typeable
 --
 -- Naming conventions:
 --  * Type name: lq
---  * Type family name: AU_LQ
+--  * AccountingUnit type indexer: AU_LQ
 --  * Term name:
 --    - liq
 --    - uliq (to be used as untapped liquidity)
@@ -68,18 +68,20 @@ instance Liquidity lq => Show (TypedLiquidity lq) where
     show (TappedLiquidity liq liqt) = (show liq) ++ "@" ++ (show liqt)
     show (UntappedLiquidity uliq)   = show uliq ++ "@_"
 
--- | LiquidityVelocity Type and Operations
---
--- Naming conventions:
---  * Type name: lqv
---  * Term name: liqv
-newtype Liquidity lq => LiquidityVelocity lq = LiquidityVelocity { liquidityPerTimeUnit:: lq }
-
 -- | Timestamp Type Class
 --
 -- Naming conventions:
 --  * Type name: ts
---  * Type family name: AU_TS
+--  * AccountingUnit type indexer: AU_TS
 class (Default ts, Integral ts, Ord ts, Show ts) => Timestamp ts
---    lqvTimesTs :: (Liquidity lq, Timestamp ts) => LiquidityVelocity lq -> ts -> lq
---    lqvTimesTs liqv = (* (liquidityPerTimeUnit liqv)) . (fromInteger . toInteger)
+
+-- | LiquidityVelocity Type
+--
+-- Naming conventions:
+--  * Type name: lqv
+--  * AccountingUnit type indexer: AU_LQV
+--  * Term name: liqv
+class (Liquidity lq, Timestamp ts, Liquidity lqv) => LiquidityVelocity lqv lq ts | lqv -> lq, lqv -> ts where
+    liquidityPerTimeUnit :: lq -> lqv
+    liquidityTimesTimeUnit :: lqv -> lq
+    lqvXts :: lqv -> ts -> lq

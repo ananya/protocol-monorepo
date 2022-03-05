@@ -10,9 +10,13 @@ module Money.Superfluid.Agreements.ConstantFlowAgreement
 import           Data.Default
 import           Text.Printf
 
-import           Money.Superfluid.Concepts.AccountingUnit        (AccountingUnit (..))
-import           Money.Superfluid.Concepts.Agreement             (AgreementAccountData (..), AgreementContractData)
+import           Money.Superfluid.Concepts.Liquidity             (LiquidityVelocity (..))
 import           Money.Superfluid.Concepts.RealtimeBalance       (RealtimeBalance (..), TypedLiquidityVector (..))
+--
+import           Money.Superfluid.Concepts.Agreement             (AgreementAccountData (..), AgreementContractData)
+--
+import           Money.Superfluid.Concepts.AccountingUnit
+--
 import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
 
 
@@ -21,7 +25,7 @@ import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
 --
 data AccountingUnit au => CFAContractData au = CFAContractData
     { flowLastUpdatedAt :: AU_TS au
-    , flowRate          :: AU_LQ au
+    , flowRate          :: AU_LQV au
     , flowBuffer        :: BBS.BufferLiquidity (AU_LQ au)
     }
 
@@ -41,7 +45,7 @@ data AccountingUnit au => CFAAccountData au = CFAAccountData
     { settledAt                :: AU_TS au
     , settledUntappedLiquidity :: AU_LQ au
     , settledBufferLiquidity   :: BBS.BufferLiquidity (AU_LQ au)
-    , netFlowRate              :: AU_LQ au
+    , netFlowRate              :: AU_LQV au
     }
 
 instance AccountingUnit au => Default (CFAAccountData au) where
@@ -54,13 +58,13 @@ instance AccountingUnit au => Default (CFAAccountData au) where
 
 instance AccountingUnit au => AgreementAccountData (CFAAccountData au) au where
     providedBalanceOfAgreement CFAAccountData
-        { netFlowRate = r
+        { settledAt = t_s
         , settledUntappedLiquidity = uliq_s
         , settledBufferLiquidity = (BBS.BufferLiquidity buf_s)
-        , settledAt = t_s
+        , netFlowRate = r
         } t =
         typedLiquidityVectorToRTB $ TypedLiquidityVector
-            ( (fromInteger.toInteger)(t - t_s) * r + uliq_s )
+            ( (r `lqvXts` (t - t_s)) + uliq_s )
             [ BBS.mkBufferTypedLiquidity buf_s ]
 
 instance AccountingUnit au => Show (CFAAccountData au) where
@@ -77,7 +81,7 @@ updateFlow :: AccountingUnit au
     -- (cfaACD, senderAAD, receiverAAD)
     => (CFAContractData au, CFAAccountData au, CFAAccountData au)
     -- newFlowRate, newFlowBuffer, t
-    -> AU_LQ au -> BBS.BufferLiquidity (AU_LQ au) -> AU_TS au
+    -> AU_LQV au -> BBS.BufferLiquidity (AU_LQ au) -> AU_TS au
     -- (cfaACD', senderAAD', receiverAAD')
     -> (CFAContractData au, CFAAccountData au, CFAAccountData au)
 updateFlow (cfaACD, senderAAD, receiverAAD) newFlowRate (BBS.BufferLiquidity newFlowBuffer) t =
@@ -100,7 +104,7 @@ updateFlow (cfaACD, senderAAD, receiverAAD) newFlowRate (BBS.BufferLiquidity new
         } r_delta t_s'
         = CFAAccountData
         { netFlowRate = r + r_delta
-        , settledUntappedLiquidity = uliq_s + (fromInteger.toInteger)(t - t_s) * r - flowBufferDelta
+        , settledUntappedLiquidity = uliq_s + (r `lqvXts` (t - t_s)) - flowBufferDelta
         , settledBufferLiquidity = BBS.BufferLiquidity $ buf_s + flowBufferDelta
         , settledAt = t_s'
         }

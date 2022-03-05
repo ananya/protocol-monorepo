@@ -16,6 +16,8 @@ import           Data.Default
 import           Data.Kind                                                (Type)
 
 import           Money.Superfluid.Concepts.AccountingUnit                 (AccountingUnit (..))
+import           Money.Superfluid.Concepts.Liquidity                      (LiquidityVelocity (..))
+--
 import           Money.Superfluid.Concepts.Agreement
     ( AnyAgreementAccountData
     , providedBalanceOfAnyAgreement
@@ -138,7 +140,7 @@ class (Monad tk , Account (TK_ACC tk)) => SuperfluidToken tk where
         flowBuffer <-  calcFlowBuffer newFlowRate
         let (flowACD', senderFlowAAD', receiverFlowAAD') = CFA.updateFlow
                 (flowACD, (getCFAAccountData senderAccount), (getCFAAccountData receiverAccount))
-                newFlowRate (BBS.BufferLiquidity flowBuffer) t
+                (liquidityPerTimeUnit newFlowRate) (BBS.BufferLiquidity flowBuffer) t
         execSFStorageInstructions t
             [ UpdateFlow (senderAddr, receiverAddr, flowACD')
             , UpdateAccountFlow (senderAddr, senderFlowAAD')

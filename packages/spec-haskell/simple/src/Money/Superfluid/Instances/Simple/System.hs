@@ -80,6 +80,7 @@ data SimpleAccount = SimpleAccount
 instance AccountingUnit SimpleAccount where
     type AU_LQ SimpleAccount = Wad
     type AU_TS SimpleAccount = SimpleTimestamp
+    type AU_LQV SimpleAccount = SimpleWadRate
     type AU_RTB SimpleAccount = SimpleRealtimeBalance
 
 instance SF.Account SimpleAccount where

@@ -3,25 +3,26 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 
 module Money.Superfluid.Instances.Simple.SuperfluidTypes
-    ( Wad (..)
+    ( module Money.Superfluid.Concepts.Liquidity
+    -- Wad
+    , Wad (..)
     , toWad
     , wad4humanN
     , wad4human
+    -- SimpleWadRate
+    , SimpleWadRate
+    -- SimpleTimestamp
     , SimpleTimestamp
+    -- SimpleRealtimeBalance
+    , module Money.Superfluid.Concepts.RealtimeBalance
     , SimpleRealtimeBalance
     ) where
 
 import           Data.Default
 import           Text.Printf                                     (printf)
 
-import           Money.Superfluid.Concepts.Liquidity             (Liquidity, Timestamp, getLiquidityOfType)
+import           Money.Superfluid.Concepts.Liquidity
 import           Money.Superfluid.Concepts.RealtimeBalance
-    ( RealtimeBalance (..)
-    , RealtimeBalanceAsNum (..)
-    , RealtimeBalanceAsShow (..)
-    , TypedLiquidityVector (..)
-    , UntypedLiquidityVector (..)
-    )
 --
 import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
 
@@ -55,7 +56,21 @@ newtype SimpleTimestamp = SimpleTimestamp Int
     deriving (Enum, Eq, Ord, Num, Real, Integral, Default, Timestamp)
 
 instance Show SimpleTimestamp where
-    show (SimpleTimestamp t) = show t
+    show (SimpleTimestamp t) = (show t) ++ " s"
+
+-- ============================================================================
+-- SimpleWadRate Base Type
+--
+newtype SimpleWadRate = SimpleWadRate Wad
+    deriving (Default, Num, Eq, Ord, Liquidity)
+
+instance LiquidityVelocity SimpleWadRate Wad SimpleTimestamp where
+    liquidityPerTimeUnit = SimpleWadRate
+    liquidityTimesTimeUnit (SimpleWadRate wad) = wad
+    lqvXts liqv = (* (liquidityTimesTimeUnit liqv)) . (fromInteger . toInteger)
+
+instance Show SimpleWadRate where
+     show liqv = (show . liquidityTimesTimeUnit $ liqv) ++ "/s"
 
 -- ============================================================================
 -- SimpleRealtimeBalance Base Type
