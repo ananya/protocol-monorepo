@@ -16,10 +16,11 @@ import           Text.Printf                                     (printf)
 
 import           Money.Superfluid.Concepts.Liquidity             (Liquidity, Timestamp, getLiquidityOfType)
 import           Money.Superfluid.Concepts.RealtimeBalance
-    ( LiquidityVector (..)
-    , RealtimeBalance (..)
+    ( RealtimeBalance (..)
     , RealtimeBalanceAsNum (..)
     , RealtimeBalanceAsShow (..)
+    , TypedLiquidityVector (..)
+    , UntypedLiquidityVector (..)
     )
 --
 import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
@@ -80,10 +81,11 @@ instance RealtimeBalance SimpleRealtimeBalance Wad where
 
     untappedLiquidityToRTB uliq = SimpleRealtimeBalance uliq def def
 
-    liquidityVectorToRTB (UntypedLiquidityVector uliq uvec) = if length uvec == 2
+    untypedLiquidityVectorToRTB (UntypedLiquidityVector uliq uvec) = if length uvec == 2
         then SimpleRealtimeBalance uliq (uvec!!0) (uvec!!1)
         else error "Wrong untyped liquidity vector length"
-    liquidityVectorToRTB (TypedLiquidityVector uliq tvec) = SimpleRealtimeBalance uliq d od
+
+    typedLiquidityVectorToRTB (TypedLiquidityVector uliq tvec) = SimpleRealtimeBalance uliq d od
         -- TODO: reduce it to a single loop
         where d = foldr (+) def $ map (getLiquidityOfType BBS.bufferLiquidityType) tvec
               od = def

@@ -3,9 +3,8 @@
 {-# LANGUAGE MultiParamTypeClasses  #-}
 
 module Money.Superfluid.Concepts.RealtimeBalance
-    ( LiquidityVector (..)
-    , mkUntypedLiquidityVector
-    , untappedFromLiquidityVector
+    ( UntypedLiquidityVector (..)
+    , TypedLiquidityVector (..)
     , RealtimeBalance (..)
     , untappedLiquidityFromRTB
     , liquidityRequiredForRTB
@@ -19,17 +18,15 @@ import           Money.Superfluid.Concepts.Liquidity (Liquidity, TypedLiquidity 
 
 -- | LiquidityVector Sum Type and Operations
 --
-data Liquidity lq => LiquidityVector lq =
-    UntypedLiquidityVector lq [lq] |
-    TypedLiquidityVector lq [TypedLiquidity lq]
+data Liquidity lq => UntypedLiquidityVector lq = UntypedLiquidityVector lq [lq]
+data Liquidity lq => TypedLiquidityVector lq = TypedLiquidityVector lq [TypedLiquidity lq]
 
-mkUntypedLiquidityVector :: Liquidity lq => [lq] -> LiquidityVector lq
-mkUntypedLiquidityVector (uliq:xs) = UntypedLiquidityVector uliq xs
-mkUntypedLiquidityVector _         = error "Untapped liquidity missing"
+_mkUntypedLiquidityVector :: Liquidity lq => [lq] -> UntypedLiquidityVector lq
+_mkUntypedLiquidityVector (uliq:xs) = UntypedLiquidityVector uliq xs
+_mkUntypedLiquidityVector _         = error "Untapped liquidity missing"
 
-untappedFromLiquidityVector :: Liquidity lq => LiquidityVector lq -> lq
-untappedFromLiquidityVector (UntypedLiquidityVector uliq _) = uliq
-untappedFromLiquidityVector (TypedLiquidityVector uliq _)   = uliq
+_getUntappedLiquidity:: Liquidity lq => UntypedLiquidityVector lq -> lq
+_getUntappedLiquidity (UntypedLiquidityVector uliq _) = uliq
 
 -- | RealtimeBalance Type Class
 --
@@ -39,16 +36,17 @@ untappedFromLiquidityVector (TypedLiquidityVector uliq _)   = uliq
 --  * Term name: *RTB *Balance
 class (Liquidity lq, Num rtb, Default rtb) => RealtimeBalance rtb lq | rtb -> lq where
     rawLiquidityVectorFromRTB :: rtb -> [lq]
-    typedLiquidityVectorFromRTB :: rtb -> LiquidityVector lq
+    typedLiquidityVectorFromRTB :: rtb -> TypedLiquidityVector lq
     untappedLiquidityToRTB :: lq -> rtb
-    liquidityVectorToRTB :: LiquidityVector lq -> rtb
+    typedLiquidityVectorToRTB :: TypedLiquidityVector lq -> rtb
+    untypedLiquidityVectorToRTB :: UntypedLiquidityVector lq -> rtb
 
-untypedLiquidityVectorFromRTB :: (Liquidity lq, RealtimeBalance rtb lq) => rtb -> LiquidityVector lq
-untypedLiquidityVectorFromRTB = mkUntypedLiquidityVector . rawLiquidityVectorFromRTB
+-- untypedLiquidityVectorFromRTB :: (Liquidity lq, RealtimeBalance rtb lq) => rtb -> UntypedLiquidityVector lq
+-- untypedLiquidityVectorFromRTB = _mkUntypedLiquidityVector . rawLiquidityVectorFromRTB
 
 -- | Get untapped liquidity component of the Realtme balance vector
 untappedLiquidityFromRTB :: (Liquidity lq, RealtimeBalance rtb lq) => rtb -> lq
-untappedLiquidityFromRTB = untappedFromLiquidityVector . untypedLiquidityVectorFromRTB
+untappedLiquidityFromRTB = _getUntappedLiquidity . _mkUntypedLiquidityVector . rawLiquidityVectorFromRTB
 
 liquidityRequiredForRTB :: (Liquidity lq, RealtimeBalance rtb lq) => rtb -> lq
 liquidityRequiredForRTB = foldr (+) def . rawLiquidityVectorFromRTB
@@ -62,7 +60,7 @@ liquidityRequiredForRTB = foldr (+) def . rawLiquidityVectorFromRTB
 newtype (Liquidity lq, RealtimeBalance rtb lq) => RealtimeBalanceAsNum rtb lq = RealtimeBalanceAsNum rtb
 instance (Liquidity lq, RealtimeBalance rtb lq) => Num (RealtimeBalanceAsNum rtb lq) where
     (+) (RealtimeBalanceAsNum a) (RealtimeBalanceAsNum b) = RealtimeBalanceAsNum $
-        liquidityVectorToRTB . mkUntypedLiquidityVector $
+        untypedLiquidityVectorToRTB . _mkUntypedLiquidityVector $
         zipWith (+) (rawLiquidityVectorFromRTB a) (rawLiquidityVectorFromRTB b)
     (*) = error "No definition"
     fromInteger x = RealtimeBalanceAsNum $
@@ -84,4 +82,3 @@ instance (Liquidity lq, RealtimeBalance rtb lq) => Show (RealtimeBalanceAsShow r
             ++ show uliq
             ++ foldl ((++) . (++ ", ")) "" ((map show) . (filter ((/= def) . getUntyppedLiquidity )) $ tvec)
             ++ " )"
-        showDetail _                                = error "Expecting typed liquidity vector"

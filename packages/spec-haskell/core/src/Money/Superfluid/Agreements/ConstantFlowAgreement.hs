@@ -12,7 +12,7 @@ import           Text.Printf
 
 import           Money.Superfluid.Concepts.AccountingUnit        (AccountingUnit (..))
 import           Money.Superfluid.Concepts.Agreement             (AgreementAccountData (..), AgreementContractData)
-import           Money.Superfluid.Concepts.RealtimeBalance       (LiquidityVector (..), RealtimeBalance (..))
+import           Money.Superfluid.Concepts.RealtimeBalance       (RealtimeBalance (..), TypedLiquidityVector (..))
 import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
 
 
@@ -59,7 +59,7 @@ instance AccountingUnit au => AgreementAccountData (CFAAccountData au) au where
         , settledBufferLiquidity = (BBS.BufferLiquidity buf_s)
         , settledAt = t_s
         } t =
-        liquidityVectorToRTB $ TypedLiquidityVector
+        typedLiquidityVectorToRTB $ TypedLiquidityVector
             ( (fromInteger.toInteger)(t - t_s) * r + uliq_s )
             [ BBS.mkBufferTypedLiquidity buf_s ]
 
