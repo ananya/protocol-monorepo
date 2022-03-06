@@ -10,7 +10,11 @@ module Money.Superfluid.Agreements.ConstantFlowAgreement
 import           Data.Default
 import           Text.Printf
 
-import           Money.Superfluid.Concepts.Liquidity             (LiquidityVelocity (..))
+import           Money.Superfluid.Concepts.Liquidity
+    ( LiquidityVelocity (..)
+    , UntappedLiquidity (..)
+    , untypeLiquidity
+    )
 import           Money.Superfluid.Concepts.RealtimeBalance       (RealtimeBalance (..), TypedLiquidityVector (..))
 --
 import           Money.Superfluid.Concepts.Agreement             (AgreementAccountData (..), AgreementContractData)
@@ -43,7 +47,7 @@ instance AccountingUnit au => AgreementContractData (CFAContractData au) au
 --
 data AccountingUnit au => CFAAccountData au = CFAAccountData
     { settledAt                :: AU_TS au
-    , settledUntappedLiquidity :: AU_LQ au
+    , settledUntappedLiquidity :: UntappedLiquidity (AU_LQ au)
     , settledBufferLiquidity   :: BBS.BufferLiquidity (AU_LQ au)
     , netFlowRate              :: AU_LQV au
     }
@@ -51,7 +55,7 @@ data AccountingUnit au => CFAAccountData au = CFAAccountData
 instance AccountingUnit au => Default (CFAAccountData au) where
     def = CFAAccountData
         { settledAt = def
-        , settledUntappedLiquidity = def
+        , settledUntappedLiquidity = UntappedLiquidity def
         , netFlowRate = def
         , settledBufferLiquidity = def
         }
@@ -59,18 +63,18 @@ instance AccountingUnit au => Default (CFAAccountData au) where
 instance AccountingUnit au => AgreementAccountData (CFAAccountData au) au where
     providedBalanceOfAgreement CFAAccountData
         { settledAt = t_s
-        , settledUntappedLiquidity = uliq_s
+        , settledUntappedLiquidity = (UntappedLiquidity uliq_s)
         , settledBufferLiquidity = (BBS.BufferLiquidity buf_s)
         , netFlowRate = r
         } t =
         typedLiquidityVectorToRTB $ TypedLiquidityVector
-            ( (r `lqvXts` (t - t_s)) + uliq_s )
-            [ BBS.mkBufferTypedLiquidity buf_s ]
+            ( UntappedLiquidity $ (r `lqvXts` (t - t_s)) + uliq_s )
+            [ BBS.mkBufferTappedLiquidity buf_s ]
 
 instance AccountingUnit au => Show (CFAAccountData au) where
     show x = printf "{ t = %s, uliq = %s, net = %s, buf = %s}"
         (show $ settledAt x)
-        (show $ settledUntappedLiquidity x)
+        (show $ untypeLiquidity $ settledUntappedLiquidity x)
         (show $ netFlowRate x)
         (show $ settledBufferLiquidity x)
 
@@ -98,13 +102,13 @@ updateFlow (cfaACD, senderAAD, receiverAAD) newFlowRate (BBS.BufferLiquidity new
     flowBufferDelta = newFlowBuffer - (BBS.getBufferLiquidity . flowBuffer $ cfaACD)
     updateFlowRate CFAAccountData
         { netFlowRate = r
-        , settledUntappedLiquidity = uliq_s
+        , settledUntappedLiquidity = (UntappedLiquidity uliq_s)
         , settledBufferLiquidity = (BBS.BufferLiquidity buf_s)
         , settledAt = t_s
         } r_delta t_s'
         = CFAAccountData
         { netFlowRate = r + r_delta
-        , settledUntappedLiquidity = uliq_s + (r `lqvXts` (t - t_s)) - flowBufferDelta
+        , settledUntappedLiquidity = UntappedLiquidity $ uliq_s + (r `lqvXts` (t - t_s)) - flowBufferDelta
         , settledBufferLiquidity = BBS.BufferLiquidity $ buf_s + flowBufferDelta
         , settledAt = t_s'
         }

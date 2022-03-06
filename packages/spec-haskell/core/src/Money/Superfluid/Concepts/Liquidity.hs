@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE FunctionalDependencies     #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -25,9 +26,6 @@ import           Data.Typeable
 -- Naming conventions:
 --  * Type name: lq
 --  * AccountingUnit type indexer: AU_LQ
---  * Term name:
---    - liq
---    - uliq (to be used as untapped liquidity)
 class (Default lq, Num lq, Ord lq, Show lq) => Liquidity lq
 
 -- | Liquidity Type
@@ -41,32 +39,39 @@ liquidityTypeTag (LiquidityType _ x) = x
 instance Eq LiquidityType where (==) (LiquidityType a _) (LiquidityType b _) = a == b
 instance Show LiquidityType where show = liquidityTypeTag
 
--- | TypedLiquidity Sum Type and Operations
+-- | TypedLiquidity Type Class
 --
--- Naming conventions for UntappedLiquidity:
+-- Naming conventions:
+--  * Type name: tlq
+--
+class Liquidity lq => TypedLiquidity tlq lq | tlq -> lq where
+    untypeLiquidity :: tlq -> lq
+
+-- | UntappedLiquidity Type
+--
+-- Naming conventions:
 --  * Term name: uliq
+--
+data UntappedLiquidity lq = UntappedLiquidity lq
+instance Liquidity lq => TypedLiquidity (UntappedLiquidity lq) lq where
+    untypeLiquidity (UntappedLiquidity liq) = liq
+instance Liquidity lq => Show (UntappedLiquidity lq) where
+    show (UntappedLiquidity uliq) = show uliq ++ "@_"
+
+-- | TappedLiquidity Type
 --
 -- Naming conventions for TappedLiquidity:
 --  * Term name: tliq
-data Liquidity lq => TypedLiquidity lq =
-    UntappedLiquidity lq |
-    TappedLiquidity lq LiquidityType
-
-getUntyppedLiquidity :: Liquidity lq => TypedLiquidity lq -> lq
-getUntyppedLiquidity (UntappedLiquidity liq) = liq
-getUntyppedLiquidity (TappedLiquidity liq _) = liq
-
-isOfLiquidityType :: Liquidity lq => LiquidityType -> TypedLiquidity lq -> Bool
-isOfLiquidityType _ (UntappedLiquidity _)         = False
-isOfLiquidityType liqt1 (TappedLiquidity _ liqt2) = liqt1 == liqt2
-
-getLiquidityOfType :: Liquidity lq => LiquidityType -> TypedLiquidity lq -> lq
-getLiquidityOfType _ (UntappedLiquidity _)           = def
-getLiquidityOfType liqt1 (TappedLiquidity liq liqt2) = if liqt1 == liqt2 then liq else def
-
-instance Liquidity lq => Show (TypedLiquidity lq) where
+--
+data TappedLiquidity lq = TappedLiquidity lq LiquidityType
+instance Liquidity lq => TypedLiquidity (TappedLiquidity lq) lq where
+    untypeLiquidity (TappedLiquidity liq _) = liq
+instance Liquidity lq => Show (TappedLiquidity lq) where
     show (TappedLiquidity liq liqt) = (show liq) ++ "@" ++ (show liqt)
-    show (UntappedLiquidity uliq)   = show uliq ++ "@_"
+isOfLiquidityType :: Liquidity lq => LiquidityType -> TappedLiquidity lq -> Bool
+isOfLiquidityType liqt1 (TappedLiquidity _ liqt2) = liqt1 == liqt2
+getLiquidityOfType :: Liquidity lq => LiquidityType -> TappedLiquidity lq -> lq
+getLiquidityOfType liqt1 (TappedLiquidity liq liqt2) = if liqt1 == liqt2 then liq else def
 
 -- | Timestamp Type Class
 --

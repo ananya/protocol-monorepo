@@ -56,7 +56,7 @@ newtype SimpleTimestamp = SimpleTimestamp Int
     deriving (Enum, Eq, Ord, Num, Real, Integral, Default, Timestamp)
 
 instance Show SimpleTimestamp where
-    show (SimpleTimestamp t) = (show t) ++ " s"
+    show (SimpleTimestamp t) = (show t) ++ "s"
 
 -- ============================================================================
 -- SimpleWadRate Base Type
@@ -90,8 +90,8 @@ instance RealtimeBalance SimpleRealtimeBalance Wad where
     rawLiquidityVectorFromRTB rtb = map (flip id rtb) [untappedLiquidityVal, depositVal, owedDepositVal]
 
     typedLiquidityVectorFromRTB rtb = TypedLiquidityVector
-        (untappedLiquidityVal rtb)
-        [ BBS.mkBufferTypedLiquidity $ depositVal rtb
+        ( UntappedLiquidity $ untappedLiquidityVal rtb)
+        [ BBS.mkBufferTappedLiquidity $ depositVal rtb
         ]
 
     untappedLiquidityToRTB uliq = SimpleRealtimeBalance uliq def def
@@ -100,7 +100,7 @@ instance RealtimeBalance SimpleRealtimeBalance Wad where
         then SimpleRealtimeBalance uliq (uvec!!0) (uvec!!1)
         else error "Wrong untyped liquidity vector length"
 
-    typedLiquidityVectorToRTB (TypedLiquidityVector uliq tvec) = SimpleRealtimeBalance uliq d od
+    typedLiquidityVectorToRTB (TypedLiquidityVector (UntappedLiquidity uliq) tvec) = SimpleRealtimeBalance uliq d od
         -- TODO: reduce it to a single loop
         where d = foldr (+) def $ map (getLiquidityOfType BBS.bufferLiquidityType) tvec
               od = def

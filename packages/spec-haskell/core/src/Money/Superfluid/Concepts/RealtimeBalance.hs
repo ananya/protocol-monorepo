@@ -14,12 +14,12 @@ module Money.Superfluid.Concepts.RealtimeBalance
 
 import           Data.Default
 
-import           Money.Superfluid.Concepts.Liquidity (Liquidity, TypedLiquidity (..), getUntyppedLiquidity)
+import           Money.Superfluid.Concepts.Liquidity (Liquidity, TappedLiquidity (..), UntappedLiquidity (..))
 
 -- | LiquidityVector Sum Type and Operations
 --
 data Liquidity lq => UntypedLiquidityVector lq = UntypedLiquidityVector lq [lq]
-data Liquidity lq => TypedLiquidityVector lq = TypedLiquidityVector lq [TypedLiquidity lq]
+data Liquidity lq => TypedLiquidityVector lq = TypedLiquidityVector (UntappedLiquidity lq) [TappedLiquidity lq]
 
 _mkUntypedLiquidityVector :: Liquidity lq => [lq] -> UntypedLiquidityVector lq
 _mkUntypedLiquidityVector (uliq:xs) = UntypedLiquidityVector uliq xs
@@ -77,5 +77,6 @@ instance (Liquidity lq, RealtimeBalance rtb lq) => Show (RealtimeBalanceAsShow r
         where
         showDetail (TypedLiquidityVector uliq tvec) = "( "
             ++ show uliq
-            ++ foldl ((++) . (++ ", ")) "" ((map show) . (filter ((/= def) . getUntyppedLiquidity )) $ tvec)
+            -- ++ foldl ((++) . (++ ", ")) "" ((map show) . (filter ((/= def) . untypeLiquidity )) $ tvec)
+            ++ foldl ((++) . (++ ", ")) "" (map show $ tvec)
             ++ " )"
