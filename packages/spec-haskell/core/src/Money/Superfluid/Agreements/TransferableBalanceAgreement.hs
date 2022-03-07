@@ -43,14 +43,14 @@ instance AccountingUnit au => Show (TBAAccountData au) where
 -- TBA Operations
 --
 mintLiquidity :: AccountingUnit au => TBAAccountData au -> AU_LQ au -> TBAAccountData au
-mintLiquidity a l = a { liquidity = UntappedLiquidity $ (_untypedLiquidity a) + l }
+mintLiquidity a l = a { liquidity = UntappedLiquidity $ _untypedLiquidity a + l }
 
 burnLiquidity :: AccountingUnit au => TBAAccountData au -> AU_LQ au -> TBAAccountData au
-burnLiquidity a l = a { liquidity = UntappedLiquidity $ (_untypedLiquidity a) - l }
+burnLiquidity a l = a { liquidity = UntappedLiquidity $ _untypedLiquidity a - l }
 
 transferLiquidity :: AccountingUnit au
     => (TBAAccountData au, TBAAccountData au) -> AU_LQ au
     -> (TBAAccountData au, TBAAccountData au)
 transferLiquidity (from, to) l =
-    ( from { liquidity = UntappedLiquidity $ (_untypedLiquidity from) - l }
-    , to   { liquidity = UntappedLiquidity $ (_untypedLiquidity   to) + l })
+    ( from { liquidity = UntappedLiquidity $ _untypedLiquidity from - l }
+    , to   { liquidity = UntappedLiquidity $ _untypedLiquidity   to + l })

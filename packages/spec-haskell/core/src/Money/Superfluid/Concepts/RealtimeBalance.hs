@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
 
 module Money.Superfluid.Concepts.RealtimeBalance
     ( UntypedLiquidityVector (..)
@@ -78,5 +77,5 @@ instance (Liquidity lq, RealtimeBalance rtb lq) => Show (RealtimeBalanceAsShow r
         showDetail (TypedLiquidityVector uliq tvec) = "( "
             ++ show uliq
             -- ++ foldl ((++) . (++ ", ")) "" ((map show) . (filter ((/= def) . untypeLiquidity )) $ tvec)
-            ++ foldl ((++) . (++ ", ")) "" (map show $ tvec)
+            ++ foldl ((++) . (++ ", ")) "" (map show tvec)
             ++ " )"

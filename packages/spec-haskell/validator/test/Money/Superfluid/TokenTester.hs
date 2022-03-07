@@ -14,11 +14,11 @@ import qualified Money.Superfluid.Agreements.ConstantFlowAgreement as CFA
 import qualified Money.Superfluid.Instances.Simple.System          as SF
 
 
-cINIT_BALANCE :: SF.Wad
-cINIT_BALANCE = SF.toWad (100.0 :: Double)
+constInitBalance :: SF.Wad
+constInitBalance = SF.toWad (100.0 :: Double)
 
-cZERO_WAD :: SF.Wad
-cZERO_WAD = SF.toWad (0 :: Double)
+cZeroWad :: SF.Wad
+cZeroWad = SF.toWad (0 :: Double)
 
 -- ============================================================================
 -- | TokenTester TestCase Creator
@@ -47,7 +47,7 @@ createTokenTestCase :: TokenTestCase -> Test
 createTokenTestCase (TokenTestCase spec runner) = TestLabel (testLabel spec) $ TestCase $ do
     evalStateT (do
         let addresses = map (fromJust . SF.createSimpleAddress) (testAddressesToInit spec)
-        mapM_ (flip createTestAccount (testAccountInitBalance spec)) addresses
+        mapM_ (`createTestAccount` testAccountInitBalance spec) addresses
         runner TokenTestContext { testAddresses = addresses }
         ) TokenTesterData
         { sfSys = SF.SimpleSystemData { SF.currentTime = 0 }
@@ -83,8 +83,8 @@ expectAccountBalanceTo label addr expr = do
 
 expeceTotalBalanceTo :: HasCallStack => String -> (SF.Wad -> Bool) -> TokenTester ()
 expeceTotalBalanceTo label expr = do
-    t <- runToken $ SF.getCurrentTime
-    accounts <- runToken $ SF.listAccounts
+    t <- runToken SF.getCurrentTime
+    accounts <- runToken SF.listAccounts
     liftIO $ assertBool label (expr . RTB.liquidityRequiredForRTB $ SF.sumAccounts (map snd accounts) t)
 
 expectCFANetFlowRateTo :: HasCallStack => String -> SF.SimpleAddress -> (SF.Wad -> Bool) -> TokenTester ()

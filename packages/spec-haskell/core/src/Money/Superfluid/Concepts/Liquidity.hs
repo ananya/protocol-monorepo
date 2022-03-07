@@ -1,7 +1,5 @@
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE FunctionalDependencies     #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module Money.Superfluid.Concepts.Liquidity where
 
@@ -67,7 +65,7 @@ data TappedLiquidity lq = TappedLiquidity lq LiquidityType
 instance Liquidity lq => TypedLiquidity (TappedLiquidity lq) lq where
     untypeLiquidity (TappedLiquidity liq _) = liq
 instance Liquidity lq => Show (TappedLiquidity lq) where
-    show (TappedLiquidity liq liqt) = (show liq) ++ "@" ++ (show liqt)
+    show (TappedLiquidity liq liqt) = show liq ++ "@" ++ show liqt
 isOfLiquidityType :: Liquidity lq => LiquidityType -> TappedLiquidity lq -> Bool
 isOfLiquidityType liqt1 (TappedLiquidity _ liqt2) = liqt1 == liqt2
 getLiquidityOfType :: Liquidity lq => LiquidityType -> TappedLiquidity lq -> lq

@@ -1,6 +1,5 @@
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Money.Superfluid.Agreements.ConstantFlowAgreement
     ( CFAContractData (..)
@@ -10,16 +9,14 @@ module Money.Superfluid.Agreements.ConstantFlowAgreement
 import           Data.Default
 import           Text.Printf
 
+import           Money.Superfluid.Concepts.AccountingUnit
+import           Money.Superfluid.Concepts.Agreement             (AgreementAccountData (..), AgreementContractData)
 import           Money.Superfluid.Concepts.Liquidity
     ( LiquidityVelocity (..)
     , UntappedLiquidity (..)
     , untypeLiquidity
     )
 import           Money.Superfluid.Concepts.RealtimeBalance       (RealtimeBalance (..), TypedLiquidityVector (..))
---
-import           Money.Superfluid.Concepts.Agreement             (AgreementAccountData (..), AgreementContractData)
---
-import           Money.Superfluid.Concepts.AccountingUnit
 --
 import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
 
@@ -98,7 +95,7 @@ updateFlow (cfaACD, senderAAD, receiverAAD) newFlowRate (BBS.BufferLiquidity new
     , updateFlowRate receiverAAD flowRateDelta t
     )
     where
-    flowRateDelta = newFlowRate - (flowRate cfaACD)
+    flowRateDelta = newFlowRate - flowRate cfaACD
     flowBufferDelta = newFlowBuffer - (BBS.getBufferLiquidity . flowBuffer $ cfaACD)
     updateFlowRate CFAAccountData
         { netFlowRate = r

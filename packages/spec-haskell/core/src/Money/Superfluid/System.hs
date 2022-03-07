@@ -1,7 +1,6 @@
-{-# LANGUAGE FlexibleContexts       #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GADTs            #-}
+{-# LANGUAGE TypeFamilies     #-}
 
 module Money.Superfluid.System
     ( Address
@@ -59,12 +58,12 @@ class (AccountingUnit acc) => Account acc where
 
 balanceOfAccountAt :: Account acc => acc -> AU_TS acc -> AU_RTB acc
 balanceOfAccountAt holderAccount t = foldr
-    (+)
+    ((+) . (`providedBalanceOfAnyAgreement` t))
     def
-    (map (flip providedBalanceOfAnyAgreement t) (agreementsOfAccount holderAccount))
+    (agreementsOfAccount holderAccount)
 
 sumAccounts :: Account acc => [acc] -> AU_TS acc -> AU_RTB acc
-sumAccounts alist t = foldr (+) def (map (flip balanceOfAccountAt t) alist)
+sumAccounts alist t = foldr ((+) . (`balanceOfAccountAt` t)) def alist
 
 -- ============================================================================
 -- | AccountStorageInstruction Sum Type
@@ -139,7 +138,7 @@ class (Monad tk , Account (TK_ACC tk)) => SuperfluidToken tk where
         flowACD <- getFlow senderAddr receiverAddr
         flowBuffer <-  calcFlowBuffer newFlowRate
         let (flowACD', senderFlowAAD', receiverFlowAAD') = CFA.updateFlow
-                (flowACD, (getCFAAccountData senderAccount), (getCFAAccountData receiverAccount))
+                (flowACD, getCFAAccountData senderAccount, getCFAAccountData receiverAccount)
                 (liquidityPerTimeUnit newFlowRate) (BBS.BufferLiquidity flowBuffer) t
         execSFStorageInstructions t
             [ UpdateFlow (senderAddr, receiverAddr, flowACD')

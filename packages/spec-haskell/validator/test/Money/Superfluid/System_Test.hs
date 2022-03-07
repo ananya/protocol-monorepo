@@ -12,12 +12,12 @@ simple1to1ScenarioTest :: TokenTestCase
 simple1to1ScenarioTest = TokenTestCase TokenTestSpec
     { testLabel = "Simple 1to1 Scenario Test"
     , testAddressesToInit = ["alice", "bob", "carol"]
-    , testAccountInitBalance = cINIT_BALANCE
+    , testAccountInitBalance = constInitBalance
     } (\ctx -> do
-    let [alice, bob, carol] = (testAddresses ctx)
+    let [alice, bob, carol] = testAddresses ctx
     -- T0: test initial condition
-    expeceTotalBalanceTo "total balance stays the same" (== 3 * cINIT_BALANCE)
-    accounts' <- runToken $ SF.listAccounts
+    expeceTotalBalanceTo "total balance stays the same" (== 3 * constInitBalance)
+    accounts' <- runToken SF.listAccounts
     liftIO $ assertEqual "expected number of accounts" 3 (length accounts')
 
     -- T1: test initial condition
@@ -29,20 +29,20 @@ simple1to1ScenarioTest = TokenTestCase TokenTestSpec
 
     -- T2: move time forward and test balance moves
     timeTravel $ 3600 * 24
-    expectAccountBalanceTo "alice should send money" alice (< cINIT_BALANCE)
-    expectAccountBalanceTo "bob should receive money" bob (> cINIT_BALANCE)
-    expectAccountBalanceTo "carol should be the same" carol (== cINIT_BALANCE)
-    expeceTotalBalanceTo "total balance stays the same" (== 3 * cINIT_BALANCE)
+    expectAccountBalanceTo "alice should send money" alice (< constInitBalance)
+    expectAccountBalanceTo "bob should receive money" bob (> constInitBalance)
+    expectAccountBalanceTo "carol should be the same" carol (== constInitBalance)
+    expeceTotalBalanceTo "total balance stays the same" (== 3 * constInitBalance)
     )
 
 simple1to2ScenarioTest :: TokenTestCase
 simple1to2ScenarioTest = TokenTestCase TokenTestSpec
     { testLabel = "Simple 1to2 Scenario Test"
     , testAddressesToInit = ["alice", "bob", "carol"]
-    , testAccountInitBalance = cINIT_BALANCE
+    , testAccountInitBalance = constInitBalance
     } (\ctx -> do
     -- T0: test initial condition
-    let [alice, bob, carol] = (testAddresses ctx)
+    let [alice, bob, carol] = testAddresses ctx
     runToken $ SF.updateFlow alice bob (SF.toWad (0.0001 :: Double))
     runToken $ SF.updateFlow alice carol (SF.toWad (0.0001 :: Double))
     expectCFANetFlowRateTo "alice should have -2x net flowrate" alice (== SF.toWad(-0.0002 :: Double))
@@ -51,10 +51,10 @@ simple1to2ScenarioTest = TokenTestCase TokenTestSpec
 
     -- T1: move time forward and test balance moves
     timeTravel $ 3600 * 24
-    expectAccountBalanceTo "alice should send money" alice (< cINIT_BALANCE)
-    expectAccountBalanceTo "bob should receive money" bob (> cINIT_BALANCE)
-    expectAccountBalanceTo "carol should also receive money" carol (> cINIT_BALANCE)
-    expeceTotalBalanceTo "total balance stays the same" (== 3 * cINIT_BALANCE)
+    expectAccountBalanceTo "alice should send money" alice (< constInitBalance)
+    expectAccountBalanceTo "bob should receive money" bob (> constInitBalance)
+    expectAccountBalanceTo "carol should also receive money" carol (> constInitBalance)
+    expeceTotalBalanceTo "total balance stays the same" (== 3 * constInitBalance)
     )
 
 tests :: Test

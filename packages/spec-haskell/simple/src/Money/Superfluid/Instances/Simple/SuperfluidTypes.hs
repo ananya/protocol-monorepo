@@ -39,7 +39,7 @@ toWad x = Wad (round $ x * (10 ^ (18::Integer)))
 wad4humanN :: Wad -> Integer -> String -- TODO use Nat?
 wad4humanN (Wad wad) n
     | n >= 0 && n <= 18 = printf
-        ("%0."++(show n)++"f")
+        ("%0." ++ show n ++ "f")
         ((fromIntegral wad / (10 ^ (18::Integer))) :: Double)
     | otherwise = error "Invalid parameter"
 
@@ -56,7 +56,7 @@ newtype SimpleTimestamp = SimpleTimestamp Int
     deriving (Enum, Eq, Ord, Num, Real, Integral, Default, Timestamp)
 
 instance Show SimpleTimestamp where
-    show (SimpleTimestamp t) = (show t) ++ "s"
+    show (SimpleTimestamp t) = show t ++ "s"
 
 -- ============================================================================
 -- SimpleWadRate Base Type
@@ -67,7 +67,7 @@ newtype SimpleWadRate = SimpleWadRate Wad
 instance LiquidityVelocity SimpleWadRate Wad SimpleTimestamp where
     liquidityPerTimeUnit = SimpleWadRate
     liquidityTimesTimeUnit (SimpleWadRate wad) = wad
-    lqvXts liqv = (* (liquidityTimesTimeUnit liqv)) . (fromInteger . toInteger)
+    lqvXts liqv = (* liquidityTimesTimeUnit liqv) . (fromInteger . toInteger)
 
 instance Show SimpleWadRate where
      show liqv = (show . liquidityTimesTimeUnit $ liqv) ++ "/s"
@@ -87,7 +87,7 @@ instance Default SimpleRealtimeBalance where
     def = SimpleRealtimeBalance { untappedLiquidityVal = def, depositVal = def, owedDepositVal = def }
 
 instance RealtimeBalance SimpleRealtimeBalance Wad where
-    rawLiquidityVectorFromRTB rtb = map (flip id rtb) [untappedLiquidityVal, depositVal, owedDepositVal]
+    rawLiquidityVectorFromRTB rtb = map (`id` rtb) [untappedLiquidityVal, depositVal, owedDepositVal]
 
     typedLiquidityVectorFromRTB rtb = TypedLiquidityVector
         ( UntappedLiquidity $ untappedLiquidityVal rtb)
@@ -97,10 +97,10 @@ instance RealtimeBalance SimpleRealtimeBalance Wad where
     untappedLiquidityToRTB uliq = SimpleRealtimeBalance uliq def def
 
     untypedLiquidityVectorToRTB (UntypedLiquidityVector uliq uvec) = if length uvec == 2
-        then SimpleRealtimeBalance uliq (uvec!!0) (uvec!!1)
+        then SimpleRealtimeBalance uliq (head uvec) (uvec!!1)
         else error "Wrong untyped liquidity vector length"
 
     typedLiquidityVectorToRTB (TypedLiquidityVector (UntappedLiquidity uliq) tvec) = SimpleRealtimeBalance uliq d od
         -- TODO: reduce it to a single loop
-        where d = foldr (+) def $ map (getLiquidityOfType BBS.bufferLiquidityType) tvec
+        where d = foldr ((+) . getLiquidityOfType BBS.bufferLiquidityType) def tvec
               od = def

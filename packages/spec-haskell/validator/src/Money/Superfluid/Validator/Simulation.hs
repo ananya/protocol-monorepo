@@ -18,6 +18,7 @@ module Money.Superfluid.Validator.Simulation
 import           Control.Monad.IO.Class
 import           Control.Monad.Trans.State
 import           Data.Default
+import           Data.Functor
 import qualified Data.Map                                 as M
 import           Data.Maybe
 import           GHC.Stack
@@ -47,7 +48,7 @@ runSimMonad = flip evalStateT SimData
 -- | SimMonad Operations
 --
 getCurrentTime :: HasCallStack => SimMonad SF.SimpleTimestamp
-getCurrentTime = get >>= return . SF.currentTime . sfSys
+getCurrentTime = get <&> SF.currentTime . sfSys
 
 timeTravel :: HasCallStack => SF.SimpleTimestamp -> SimMonad ()
 timeTravel d = modify (\vs -> vs { sfSys = (sfSys vs) { SF.currentTime = (+ d) . SF.currentTime . sfSys $ vs } })
@@ -90,10 +91,10 @@ printTokenState :: HasCallStack => SimData -> TokenMonad ()
 printTokenState s = do
     let banner = 60 `replicate` '='
     liftIO $ putStrLn banner
-    liftIO $ putStrLn $ "## Accounts\n"
+    liftIO $ putStrLn "## Accounts\n"
     accounts <- SF.listAccounts
     mapM_ (flip (printAccount . snd) s) accounts
     totalLiquidtySum <- sumTotalLiquidity s
-    liftIO $ putStrLn $ "## Token Info\n"
-    liftIO $ putStrLn $ "Total Balance: " ++ (show totalLiquidtySum)
+    liftIO $ putStrLn "## Token Info\n"
+    liftIO $ putStrLn $ "Total Balance: " ++ show totalLiquidtySum
     liftIO $ putStrLn (banner ++ "\n")
