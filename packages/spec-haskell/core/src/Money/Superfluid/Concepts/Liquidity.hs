@@ -1,11 +1,6 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Money.Superfluid.Concepts.Liquidity where
-
-import           Data.Default
-import           Data.Typeable
-
 -- | Liquidity Concept
 --
 -- Terminology:
@@ -18,6 +13,10 @@ import           Data.Typeable
 --  * Atomic Composite Agreement (ACA)
 --  * Buffer Based Solvency (BBS)
 --
+module Money.Superfluid.Concepts.Liquidity where
+
+import           Data.Default
+import           Data.Typeable
 
 -- | (Untyped) Liquidity Type Class
 --
@@ -87,4 +86,9 @@ class (Default ts, Integral ts, Ord ts, Show ts) => Timestamp ts
 class (Liquidity lq, Timestamp ts, Liquidity lqv) => LiquidityVelocity lqv lq ts | lqv -> lq, lqv -> ts where
     liquidityPerTimeUnit :: lq -> lqv
     liquidityTimesTimeUnit :: lqv -> lq
+    -- LiquidityVector*Timestamp multiplication function and operator aliases
     lqvXts :: lqv -> ts -> lq
+    (~~*) :: lqv -> ts ->lq
+    (~~*) = lqvXts
+    (*~~) :: ts -> lqv ->lq
+    (*~~) = flip lqvXts

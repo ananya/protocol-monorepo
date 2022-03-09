@@ -5,6 +5,7 @@ module Money.Superfluid.Concepts.AccountingUnit
     ( AccountingUnit (..)
     ) where
 
+import           Data.Binary
 import           Data.Kind                                 (Type)
 
 import           Money.Superfluid.Concepts.Liquidity
@@ -15,11 +16,13 @@ import           Money.Superfluid.Concepts.RealtimeBalance
 -- Naming conventions:
 --  * Type name : au
 --
-class ( Liquidity (AU_LQ au)
-      , Timestamp (AU_TS au)
-      , LiquidityVelocity (AU_LQV au) (AU_LQ au) (AU_TS au)
-      , RealtimeBalance (AU_RTB au) (AU_LQ au)
+class ( Liquidity (AU_LQ au), Binary (AU_LQ au)
+      , Timestamp (AU_TS au), Binary (AU_TS au)
+      , LiquidityVelocity (AU_LQV au) (AU_LQ au) (AU_TS au), Binary (AU_TS au)
+      , RealtimeBalance (AU_RTB au) (AU_LQ au), Binary (AU_RTB au)
       ) => AccountingUnit au where
+
+    -- Associated Types
     type AU_LQ au :: Type
     type AU_TS au :: Type
     type AU_LQV au :: Type

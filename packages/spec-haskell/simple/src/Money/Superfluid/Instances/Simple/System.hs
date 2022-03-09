@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE TypeFamilies               #-}
@@ -30,6 +31,8 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Reader
 import           Control.Monad.Trans.State
+import qualified Data.Binary                                              as B
+import           Data.Binary.Put                                          (runPut)
 import           Data.Char
 import           Data.Default
 import           Data.Functor
@@ -54,7 +57,8 @@ import           Money.Superfluid.Instances.Simple.SuperfluidTypes
 --
 -- Note: It must consist of only alphabetical letters
 --
-newtype SimpleAddress = SimpleAddress String deriving (Eq, Ord, SF.Address)
+newtype SimpleAddress = SimpleAddress String
+    deriving newtype (Eq, Ord, B.Binary, SF.Address)
 
 instance Show SimpleAddress where
     show (SimpleAddress a) = a
@@ -141,11 +145,12 @@ instance Default SimpleTokenData where
 -- ============================================================================
 -- | Simple Monad Transformer stack
 newtype SimpleSystemStateT m a = SimpleSystemStateT (ReaderT SimpleSystemData m a)
-    deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
+    deriving newtype (Functor, Applicative, Monad, MonadTrans, MonadIO)
 newtype SimpleTokenStateT m a = SimpleTokenStateT
     ( StateT SimpleTokenData
     ( SimpleSystemStateT m )
-    a ) deriving (Functor, Applicative, Monad, MonadIO)
+    a )
+    deriving newtype (Functor, Applicative, Monad, MonadIO)
 instance MonadTrans SimpleTokenStateT where
     lift m = SimpleTokenStateT $ StateT $ \s -> lift m >>= \a -> return (a, s)
 

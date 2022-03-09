@@ -65,7 +65,7 @@ instance AccountingUnit au => AgreementAccountData (CFAAccountData au) au where
         , netFlowRate = r
         } t =
         typedLiquidityVectorToRTB $ TypedLiquidityVector
-            ( UntappedLiquidity $ (r `lqvXts` (t - t_s)) + uliq_s )
+            ( UntappedLiquidity $ (r ~~* (t - t_s)) + uliq_s )
             [ BBS.mkBufferTappedLiquidity buf_s ]
 
 instance AccountingUnit au => Show (CFAAccountData au) where
@@ -105,7 +105,7 @@ updateFlow (cfaACD, senderAAD, receiverAAD) newFlowRate (BBS.BufferLiquidity new
         } r_delta t_s'
         = CFAAccountData
         { netFlowRate = r + r_delta
-        , settledUntappedLiquidity = UntappedLiquidity $ uliq_s + (r `lqvXts` (t - t_s)) - flowBufferDelta
+        , settledUntappedLiquidity = UntappedLiquidity $ uliq_s + (r ~~* (t - t_s)) - flowBufferDelta
         , settledBufferLiquidity = BBS.BufferLiquidity $ buf_s + flowBufferDelta
         , settledAt = t_s'
         }

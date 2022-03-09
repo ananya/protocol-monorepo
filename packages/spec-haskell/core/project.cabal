@@ -27,5 +27,6 @@ library
     build-depends:
         base >=4.12,
         data-default,
+        binary,
         containers,
         transformers

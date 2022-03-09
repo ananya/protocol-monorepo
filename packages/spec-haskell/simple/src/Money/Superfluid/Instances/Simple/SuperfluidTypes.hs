@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveAnyClass             #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE DerivingVia                #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -18,7 +21,9 @@ module Money.Superfluid.Instances.Simple.SuperfluidTypes
     , SimpleRealtimeBalance
     ) where
 
+import           Data.Binary
 import           Data.Default
+import           GHC.Generics                                    (Generic)
 import           Text.Printf                                     (printf)
 
 import           Money.Superfluid.Concepts.Liquidity
@@ -31,7 +36,8 @@ import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
 --   * 18 decimal digit fixed-precision integer
 --   * an instance of Liquidity
 --
-newtype Wad = Wad Integer deriving (Eq, Ord, Num, Default, Liquidity)
+newtype Wad = Wad Integer
+    deriving newtype (Eq, Ord, Num, Default, Binary, Liquidity)
 
 toWad :: (RealFrac a) => a -> Wad
 toWad x = Wad (round $ x * (10 ^ (18::Integer)))
@@ -53,7 +59,7 @@ instance Show Wad where
 -- SimpleTimestamp Base Type
 --
 newtype SimpleTimestamp = SimpleTimestamp Int
-    deriving (Enum, Eq, Ord, Num, Real, Integral, Default, Timestamp)
+    deriving newtype (Enum, Eq, Ord, Num, Real, Integral, Default, Binary, Timestamp)
 
 instance Show SimpleTimestamp where
     show (SimpleTimestamp t) = show t ++ "s"
@@ -62,7 +68,7 @@ instance Show SimpleTimestamp where
 -- SimpleWadRate Base Type
 --
 newtype SimpleWadRate = SimpleWadRate Wad
-    deriving (Default, Num, Eq, Ord, Liquidity)
+    deriving newtype (Default, Num, Eq, Ord, Binary, Liquidity)
 
 instance LiquidityVelocity SimpleWadRate Wad SimpleTimestamp where
     liquidityPerTimeUnit = SimpleWadRate
@@ -80,6 +86,8 @@ data SimpleRealtimeBalance = SimpleRealtimeBalance
     , depositVal           :: Wad
     , owedDepositVal       :: Wad
     }
+    deriving stock (Generic)
+    deriving anyclass (Binary)
     deriving Num via RealtimeBalanceAsNum SimpleRealtimeBalance Wad
     deriving Show via RealtimeBalanceAsShow SimpleRealtimeBalance Wad
 
