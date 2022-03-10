@@ -110,5 +110,5 @@ instance RealtimeBalance SimpleRealtimeBalance Wad where
 
     typedLiquidityVectorToRTB (TypedLiquidityVector (UntappedLiquidity uliq) tvec) = SimpleRealtimeBalance uliq d od
         -- TODO: reduce it to a single loop
-        where d = foldr ((+) . getLiquidityOfType BBS.bufferLiquidityType) def tvec
+        where d = foldr ((+) . getLiquidityOfType BBS.bufferLiquidityTag) def tvec
               od = def
