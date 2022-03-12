@@ -1,5 +1,5 @@
 packages:
-    core/project.cabal
+    core/superfluid-protocol-spec-core.cabal
     simple/project.cabal
     validator/project.cabal
 
