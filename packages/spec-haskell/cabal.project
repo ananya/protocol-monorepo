@@ -1,6 +1,6 @@
 packages:
     core/superfluid-protocol-spec-core.cabal
-    simple/project.cabal
-    validator/project.cabal
+    simple/superfluid-protocol-systems-simple.cabal
+    validator/superfluid-protocol-spec-validator.cabal
 
 tests: True
