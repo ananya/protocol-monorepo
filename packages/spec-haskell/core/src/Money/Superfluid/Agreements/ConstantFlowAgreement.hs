@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass        #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -6,17 +7,22 @@ module Money.Superfluid.Agreements.ConstantFlowAgreement
     , CFAAccountData (..)
     , updateFlow
     ) where
-import           Data.Default
+
 import           Text.Printf
 
 import           Money.Superfluid.Concepts.AccountingUnit
-import           Money.Superfluid.Concepts.Agreement             (AgreementAccountData (..), AgreementContractData)
+import           Money.Superfluid.Concepts.Agreement
+    ( AgreementAccountData (..)
+    , AgreementContractData
+    , AgreementData
+    )
 import           Money.Superfluid.Concepts.Liquidity
     ( LiquidityVelocity (..)
     , UntappedLiquidity (..)
     , untypeLiquidity
     )
 import           Money.Superfluid.Concepts.RealtimeBalance       (RealtimeBalance (..), TypedLiquidityVector (..))
+import           Money.Superfluid.Concepts.TaggedTypeable
 --
 import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
 
@@ -29,9 +35,8 @@ data AccountingUnit au => CFAContractData au = CFAContractData
     , flowRate          :: AU_LQV au
     , flowBuffer        :: BBS.BufferLiquidity (AU_LQ au)
     }
-
-instance AccountingUnit au => Default (CFAContractData au) where
-    def = CFAContractData { flowLastUpdatedAt = def, flowRate = def, flowBuffer = def }
+    deriving AgreementData
+instance AccountingUnit au => TaggedTypeable (CFAContractData au) where typeTag _ = "CFA#"
 
 instance AccountingUnit au => Show (CFAContractData au) where
     show x = printf "{ flowLastUpdatedAt = %s, flowRate = %s, flowBuffer = %s }"
@@ -48,14 +53,8 @@ data AccountingUnit au => CFAAccountData au = CFAAccountData
     , settledBufferLiquidity   :: BBS.BufferLiquidity (AU_LQ au)
     , netFlowRate              :: AU_LQV au
     }
-
-instance AccountingUnit au => Default (CFAAccountData au) where
-    def = CFAAccountData
-        { settledAt = def
-        , settledUntappedLiquidity = UntappedLiquidity def
-        , netFlowRate = def
-        , settledBufferLiquidity = def
-        }
+    deriving AgreementData
+instance AccountingUnit au => TaggedTypeable (CFAAccountData au) where typeTag _ = "CFA."
 
 instance AccountingUnit au => AgreementAccountData (CFAAccountData au) au where
     providedBalanceOfAgreement CFAAccountData

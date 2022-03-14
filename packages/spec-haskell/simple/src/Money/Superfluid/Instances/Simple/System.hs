@@ -184,13 +184,13 @@ _modifySimpleTokenData = SimpleTokenStateT . modify
 
 -- | SimpleTokenStateT m is a SuperfluidToken instance
 --
-instance (Monad m) => SF.SuperfluidToken (SimpleTokenStateT m) where
+instance (Monad m) => SF.Token (SimpleTokenStateT m) where
 
     type TK_ACC (SimpleTokenStateT m) = SimpleAccount
 
     getCurrentTime = getSystemData <&> currentTime
 
-    execSFStorageInstructions t = mapM_ (\case
+    execTokenInstructions t = mapM_ (\case
         SF.UpdateLiquidity (addr, tbaLiquidity) -> do
             account <- SF.getAccount addr
             _modifySimpleTokenData (\vs -> vs {

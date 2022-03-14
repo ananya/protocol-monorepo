@@ -7,8 +7,8 @@ module Money.Superfluid.System
     , Account (..)
     , balanceOfAccountAt
     , sumAccounts
-    , AccountStorageInstruction (..)
-    , SuperfluidToken (..)
+    , TokenInstruction (..)
+    , Token (..)
     ) where
 
 import           Data.Default
@@ -18,7 +18,9 @@ import           Money.Superfluid.Concepts.AccountingUnit                 (Accou
 import           Money.Superfluid.Concepts.Liquidity                      (LiquidityVelocity (..))
 --
 import           Money.Superfluid.Concepts.Agreement
-    ( AnyAgreementAccountData
+    ( AgreementAccountData
+    , AgreementContractData
+    , AnyAgreementAccountData
     , providedBalanceOfAnyAgreement
     )
 --
@@ -36,7 +38,7 @@ import qualified Money.Superfluid.SubSystems.BufferBasedSolvency          as BBS
 class (Eq addr, Show addr) => Address addr
 
 
--- | Account type class
+-- | AccountingUnit type class
 --
 -- Naming conventions:
 --   * Type name: acc
@@ -68,16 +70,16 @@ sumAccounts alist t = foldr ((+) . (`balanceOfAccountAt` t)) def alist
 -- ============================================================================
 -- | AccountStorageInstruction Sum Type
 --
-data AccountStorageInstruction acc where
-    UpdateLiquidity :: Account acc
-        => (ACC_ADDR acc, TBA.TBAAccountData acc) -> AccountStorageInstruction acc
-    UpdateFlow :: Account acc
-        => (ACC_ADDR acc, ACC_ADDR acc, CFA.CFAContractData acc) -> AccountStorageInstruction acc
-    UpdateAccountFlow :: Account acc
-        => (ACC_ADDR acc, CFA.CFAAccountData acc) -> AccountStorageInstruction acc
+data TokenInstruction acc where
+    UpdateAgreementContractData
+        :: AgreementContractData acd acc
+        => [ACC_ADDR acc] -> acd -> TokenInstruction acc
+    UpdateAgreementAccountData
+        :: AgreementAccountData aad acc
+        => ACC_ADDR acc -> aad -> TokenInstruction acc
 
 -- ============================================================================
--- | SuperfluidToken Type Class
+-- | Token Type Class
 --
 -- Naming conventions:
 --   * Type name: tk
@@ -85,13 +87,13 @@ data AccountStorageInstruction acc where
 --
 -- Notes:
 --
--- * SuperfluidToken is a monadic type, where all its functions run within the monadic context.
--- * SuperfluidToken provides:
+-- * Token is a monadic type, where all its functions run within the monadic context.
+-- * Token provides:
 --   * addressable account,
 --   * and agreement (TBA/CFA/GDA) operations.
--- * Instructions for write operations are executed in `execSFStorageInstructions`.
+-- * Instructions for write operations are executed in `execTokenInstructions`.
 --
-class (Monad tk , Account (TK_ACC tk)) => SuperfluidToken tk where
+class (Monad tk , Account (TK_ACC tk)) => Token tk where
 
     type TK_ACC tk :: Type
 
@@ -100,7 +102,7 @@ class (Monad tk , Account (TK_ACC tk)) => SuperfluidToken tk where
     --
     getCurrentTime :: tk (AU_TS (TK_ACC tk))
 
-    execSFStorageInstructions :: AU_TS (TK_ACC tk) -> [AccountStorageInstruction (TK_ACC tk)] -> tk ()
+    execTokenInstructions :: AU_TS (TK_ACC tk) -> [TokenInstruction (TK_ACC tk)] -> tk ()
 
     --
     -- Account operations
@@ -120,8 +122,8 @@ class (Monad tk , Account (TK_ACC tk)) => SuperfluidToken tk where
     mintLiquidity addr liquidity = do
         t <- getCurrentTime
         account <- getAccount addr
-        let account' = (TBA.mintLiquidity . getTBAAccountData) account liquidity
-        execSFStorageInstructions t [ UpdateLiquidity (addr, account') ]
+        let tbaAAD' = (TBA.mintLiquidity . getTBAAccountData) account liquidity
+        execTokenInstructions t [ UpdateAgreementAccountData addr tbaAAD' ]
 
     --
     -- CFA functions
@@ -140,8 +142,8 @@ class (Monad tk , Account (TK_ACC tk)) => SuperfluidToken tk where
         let (flowACD', senderFlowAAD', receiverFlowAAD') = CFA.updateFlow
                 (flowACD, getCFAAccountData senderAccount, getCFAAccountData receiverAccount)
                 (liquidityPerTimeUnit newFlowRate) (BBS.BufferLiquidity flowBuffer) t
-        execSFStorageInstructions t
-            [ UpdateFlow (senderAddr, receiverAddr, flowACD')
-            , UpdateAccountFlow (senderAddr, senderFlowAAD')
-            , UpdateAccountFlow (receiverAddr, receiverFlowAAD')
+        execTokenInstructions t
+            [ UpdateAgreementContractData [senderAddr, receiverAddr] flowACD'
+            , UpdateAgreementAccountData senderAddr senderFlowAAD'
+            , UpdateAgreementAccountData receiverAddr receiverFlowAAD'
             ]

@@ -2,33 +2,31 @@
 {-# LANGUAGE GADTs                  #-}
 
 module Money.Superfluid.Concepts.Agreement
-    ( AgreementContractData
+    ( AgreementData
+    , AgreementContractData
     , AgreementAccountData (..)
     , AnyAgreementAccountData (MkAgreementAccountData)
     , providedBalanceOfAnyAgreement
     ) where
 
-import           Data.Default
-
 import           Money.Superfluid.Concepts.AccountingUnit (AccountingUnit (..))
+import           Money.Superfluid.Concepts.TaggedTypeable
 
+class (TaggedTypeable ad) => AgreementData ad
 
 -- ============================================================================
 -- | AgreementContractData type class
 --
 -- Naming conventions:
 --  * Type name: acd
-class (Default acd, Show acd, AccountingUnit au)
-    => AgreementContractData acd au | acd -> au where
+class (AccountingUnit au, AgreementData acd) => AgreementContractData acd au | acd -> au where
 
 -- ============================================================================
 -- | AgreementAccountData type class
 --
 -- Naming conventions:
 --  - Type name: aad
-class (Default aad, Show aad, AccountingUnit au)
-    => AgreementAccountData aad au | aad -> au where
-
+class (AccountingUnit au, AgreementData aad) => AgreementAccountData aad au | aad -> au where
     providedBalanceOfAgreement :: aad -> AU_TS au -> AU_RTB au
 
 -- ============================================================================

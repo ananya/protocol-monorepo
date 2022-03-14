@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveAnyClass             #-}
 {-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE DerivingVia                #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -110,5 +109,5 @@ instance RealtimeBalance SimpleRealtimeBalance Wad where
 
     typedLiquidityVectorToRTB (TypedLiquidityVector (UntappedLiquidity uliq) tvec) = SimpleRealtimeBalance uliq d od
         -- TODO: reduce it to a single loop
-        where d = foldr ((+) . getLiquidityOfType BBS.bufferLiquidityTag) def tvec
+        where d = foldr ((+) . (`getLiquidityOfType` BBS.bufferLiquidityTag)) def tvec
               od = def

@@ -27,7 +27,7 @@ test-demo:
 test: $(TEST_TARGET)
 
 dev:
-	npx nodemon -e hs,cabal -i dist -i dist-newstyle -x "make build test || exit 1"
+	nodemon -e hs,cabal -i dist -i dist-newstyle -x "make build test || exit 1"
 
 .PHONY: test-suite test-demo test dev
 

@@ -1,0 +1,69 @@
+
+import qualified Data.Binary                               as B
+
+
+--
+instance AccountingUnit au => B.Binary (TBAAccountData au) where
+put x = do
+    B.put (settledAt x)
+    B.put (untypeLiquidity . liquidity $ x)
+get = do
+    settledAt' <- B.get
+    liquidity' <- B.get
+    return TBAAccountData { settledAt = settledAt', liquidity = UntappedLiquidity liquidity' }
+
+
+--
+instance AccountingUnit au => B.Binary (CFAContractData au) where
+put x = do
+B.put (flowLastUpdatedAt x)
+B.put (flowRate x)
+B.put (BBS.getBufferLiquidity . flowBuffer $ x)
+get = do
+flowLastUpdatedAt' <- B.get
+flowRate' <- B.get
+flowBuffer' <- B.get
+return CFAContractData
+    { flowLastUpdatedAt = flowLastUpdatedAt'
+    , flowRate = flowRate'
+    , flowBuffer = BBS.BufferLiquidity flowBuffer'
+    }
+
+--
+instance AccountingUnit au => B.Binary (CFAAccountData au) where
+put x = do
+B.put (settledAt x)
+B.put (untypeLiquidity . settledUntappedLiquidity $ x)
+B.put (BBS.getBufferLiquidity . settledBufferLiquidity $ x)
+B.put (netFlowRate x)
+get = do
+settledAt' <- B.get
+settledUntappedLiquidity' <- B.get
+netFlowRate' <- B.get
+settledBufferLiquidity' <- B.get
+return CFAAccountData
+    { settledAt = settledAt'
+    , settledUntappedLiquidity = UntappedLiquidity settledUntappedLiquidity'
+    , settledBufferLiquidity = BBS.BufferLiquidity settledBufferLiquidity'
+    , netFlowRate = netFlowRate'
+    }
+
+
+
+
+    -- instance AccountingUnit au => Default (CFAContractData au) where
+    --     def = CFAContractData
+    --         { flowLastUpdatedAt = def
+    --         , flowRate = def
+    --         , flowBuffer = def
+    --         }
+
+
+
+    -- instance AccountingUnit au => Default (CFAAccountData au) where
+    --     def = CFAAccountData
+    --         { settledAt = def
+    --         , settledUntappedLiquidity = UntappedLiquidity def
+    --         , settledBufferLiquidity = def
+    --         , netFlowRate = def
+    --         }

@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE TypeApplications       #-}
 
 -- | Liquidity Concept
 --
@@ -13,10 +15,27 @@
 --  * Atomic Composite Agreement (ACA)
 --  * Buffer Based Solvency (BBS)
 --
-module Money.Superfluid.Concepts.Liquidity where
+module Money.Superfluid.Concepts.Liquidity
+    -- Untyped Liquidity
+    ( Liquidity
+    -- Typed Liquidity
+    , TypedLiquidity (..)
+    -- Untapped Liquidity
+    , UntappedLiquidity (..)
+    , untappedLiquidityTag
+    -- Tapped Liquidity
+    , TappedLiquidityTag
+    , AnyTappedLiquidityTag (..)
+    , TappedLiquidity (..)
+    -- Timestamp & LiquidityVelocity
+    , Timestamp
+    , LiquidityVelocity (..)
+    ) where
 
 import           Data.Default
 import           Data.Typeable
+
+import           Money.Superfluid.Concepts.TaggedTypeable
 
 -- | (Untyped) Liquidity Type Class
 --
@@ -25,24 +44,16 @@ import           Data.Typeable
 --  * AccountingUnit type indexer: AU_LQ
 class (Default lq, Num lq, Ord lq, Show lq) => Liquidity lq
 
--- | Liquidity Type
---
--- Naming conventions:
---  * Term name: liqt
---
-data LiquidityTag = LiquidityTag TypeRep String
-liquidityTypeTag :: LiquidityTag -> String
-liquidityTypeTag (LiquidityTag _ x) = x
-instance Eq LiquidityTag where (==) (LiquidityTag a _) (LiquidityTag b _) = a == b
-instance Show LiquidityTag where show = liquidityTypeTag
-
 -- | TypedLiquidity Type Class
 --
 -- Naming conventions:
 --  * Type name: tlq
 --
-class Liquidity lq => TypedLiquidity tlq lq | tlq -> lq where
+class (Liquidity lq, Show tlq) => TypedLiquidity tlq lq | tlq -> lq where
     untypeLiquidity :: tlq -> lq
+    isOfTypeTag :: TaggedTypeable tag => tlq -> Proxy tag -> Bool
+    getLiquidityOfType :: (Liquidity lq, TypedLiquidity tlq lq, TaggedTypeable tag) => tlq -> Proxy tag -> lq
+    getLiquidityOfType tliq tag = if tliq `isOfTypeTag` tag then untypeLiquidity tliq else def
 
 -- | UntappedLiquidity Type
 --
@@ -50,25 +61,37 @@ class Liquidity lq => TypedLiquidity tlq lq | tlq -> lq where
 --  * Term name: uliq
 --
 data UntappedLiquidity lq = UntappedLiquidity lq
+
+untappedLiquidityTag :: Proxy UntappedLiquidity
+untappedLiquidityTag = Proxy @UntappedLiquidity
+
 instance Liquidity lq => TypedLiquidity (UntappedLiquidity lq) lq where
     untypeLiquidity (UntappedLiquidity liq) = liq
+    isOfTypeTag _ liqt1 = typeRep liqt1 == typeRep untappedLiquidityTag
+
 instance Liquidity lq => Show (UntappedLiquidity lq) where
-    show (UntappedLiquidity uliq) = show uliq ++ "@_"
+    show (UntappedLiquidity liq) = show liq ++ "@_"
+
+-- | TappedLiquidityTag Tags and its Exisistential GADTs AnyType
+--
+class TaggedTypeable ltag => TappedLiquidityTag ltag
+
+data AnyTappedLiquidityTag where
+    MkTappedLiquidityTag :: TappedLiquidityTag ltag => Proxy ltag -> AnyTappedLiquidityTag
 
 -- | TappedLiquidity Type
 --
--- Naming conventions for TappedLiquidity:
+-- Naming conventions for TypedLiquidity:
 --  * Term name: tliq
 --
-data TappedLiquidity lq = TappedLiquidity lq LiquidityTag
+data TappedLiquidity lq = TappedLiquidity lq AnyTappedLiquidityTag
+
 instance Liquidity lq => TypedLiquidity (TappedLiquidity lq) lq where
     untypeLiquidity (TappedLiquidity liq _) = liq
+    isOfTypeTag (TappedLiquidity _ (MkTappedLiquidityTag tag1)) tag2 = typeRep tag1 == typeRep tag2
+
 instance Liquidity lq => Show (TappedLiquidity lq) where
-    show (TappedLiquidity liq liqt) = show liq ++ "@" ++ show liqt
-isOfLiquidityTag :: Liquidity lq => LiquidityTag -> TappedLiquidity lq -> Bool
-isOfLiquidityTag liqt1 (TappedLiquidity _ liqt2) = liqt1 == liqt2
-getLiquidityOfType :: Liquidity lq => LiquidityTag -> TappedLiquidity lq -> lq
-getLiquidityOfType liqt1 (TappedLiquidity liq liqt2) = if liqt1 == liqt2 then liq else def
+    show (TappedLiquidity liq (MkTappedLiquidityTag tagProxy)) = show liq ++ "@" ++ typeTag tagProxy
 
 -- | Timestamp Type Class
 --
@@ -83,7 +106,9 @@ class (Default ts, Integral ts, Ord ts, Show ts) => Timestamp ts
 --  * Type name: lqv
 --  * AccountingUnit type indexer: AU_LQV
 --  * Term name: liqv
-class (Liquidity lq, Timestamp ts, Liquidity lqv) => LiquidityVelocity lqv lq ts | lqv -> lq, lqv -> ts where
+class (Liquidity lq, Timestamp ts, Liquidity lqv, Show lqv)
+    => LiquidityVelocity lqv lq ts
+    | lqv -> lq, lqv -> ts where
     liquidityPerTimeUnit :: lq -> lqv
     liquidityTimesTimeUnit :: lqv -> lq
     -- LiquidityVector*Timestamp multiplication function and operator aliases

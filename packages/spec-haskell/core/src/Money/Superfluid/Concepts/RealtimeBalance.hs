@@ -13,19 +13,22 @@ module Money.Superfluid.Concepts.RealtimeBalance
 
 import           Data.Default
 
-import           Money.Superfluid.Concepts.Liquidity (Liquidity, TappedLiquidity (..), UntappedLiquidity (..))
+import           Money.Superfluid.Concepts.Liquidity (Liquidity, TappedLiquidity, UntappedLiquidity)
 
--- | LiquidityVector Sum Type and Operations
+-- | UntypedLiquidityVector type
 --
 data Liquidity lq => UntypedLiquidityVector lq = UntypedLiquidityVector lq [lq]
-data Liquidity lq => TypedLiquidityVector lq = TypedLiquidityVector (UntappedLiquidity lq) [TappedLiquidity lq]
 
 _mkUntypedLiquidityVector :: Liquidity lq => [lq] -> UntypedLiquidityVector lq
 _mkUntypedLiquidityVector (uliq:xs) = UntypedLiquidityVector uliq xs
 _mkUntypedLiquidityVector _         = error "Untapped liquidity missing"
 
-_getUntappedLiquidity:: Liquidity lq => UntypedLiquidityVector lq -> lq
-_getUntappedLiquidity (UntypedLiquidityVector uliq _) = uliq
+_getUntypedUntappedLiquidity :: Liquidity lq => UntypedLiquidityVector lq -> lq
+_getUntypedUntappedLiquidity (UntypedLiquidityVector uliq _) = uliq
+
+-- | TypedLiquidityVector type
+--
+data Liquidity lq => TypedLiquidityVector lq = TypedLiquidityVector (UntappedLiquidity lq) [TappedLiquidity lq]
 
 -- | RealtimeBalance Type Class
 --
@@ -33,7 +36,7 @@ _getUntappedLiquidity (UntypedLiquidityVector uliq _) = uliq
 --  * Type name : rtb
 --  * Type family name: AU_RTB
 --  * Term name: *RTB *Balance
-class (Liquidity lq, Num rtb, Default rtb) => RealtimeBalance rtb lq | rtb -> lq where
+class (Liquidity lq, Num rtb, Default rtb, Show rtb) => RealtimeBalance rtb lq | rtb -> lq where
     rawLiquidityVectorFromRTB :: rtb -> [lq]
     typedLiquidityVectorFromRTB :: rtb -> TypedLiquidityVector lq
     untappedLiquidityToRTB :: lq -> rtb
@@ -42,7 +45,7 @@ class (Liquidity lq, Num rtb, Default rtb) => RealtimeBalance rtb lq | rtb -> lq
 
 -- | Get untapped liquidity component of the Realtme balance vector
 untappedLiquidityFromRTB :: (Liquidity lq, RealtimeBalance rtb lq) => rtb -> lq
-untappedLiquidityFromRTB = _getUntappedLiquidity . _mkUntypedLiquidityVector . rawLiquidityVectorFromRTB
+untappedLiquidityFromRTB = _getUntypedUntappedLiquidity . _mkUntypedLiquidityVector . rawLiquidityVectorFromRTB
 
 liquidityRequiredForRTB :: (Liquidity lq, RealtimeBalance rtb lq) => rtb -> lq
 liquidityRequiredForRTB = foldr (+) def . rawLiquidityVectorFromRTB
