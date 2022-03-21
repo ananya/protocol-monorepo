@@ -29,57 +29,31 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Reader
 import           Control.Monad.Trans.State
-import qualified Data.Binary                                       as B (Binary (..))
-import qualified Data.Binary.Get                                   as B (Get, runGet)
-import qualified Data.Binary.Put                                   as B (PutM, runPut)
-import           Data.ByteString.Lazy                              (ByteString)
 import           Data.Default
 import           Data.Functor
 import qualified Data.Map                                          as M
 import           Data.Maybe
 
 import           Money.Superfluid.Concepts.Agreement               (agreementTypeTag)
-import           Money.Superfluid.Concepts.SuperfluidTypes         (SuperfluidTypes (..))
 import           Money.Superfluid.Concepts.TaggedTypeable
 --
 --
 import qualified Money.Superfluid.System.AccountTokenModel         as SF
-import qualified Money.Superfluid.System.Serialize                 as S
+import qualified Money.Superfluid.System.Serialization             as S
 
+import           Money.Superfluid.Instances.Simple.Serialization
 import           Money.Superfluid.Instances.Simple.SuperfluidTypes
-
-
-instance S.Getter B.Get SimpleAccount where
-    getLQ = B.get
-    getTS = B.get
-    getLQV = B.get
-
-instance S.Putter B.PutM SimpleAccount where
-    putLQ = B.put
-    putTS = B.put
-    putLQV = B.put
-
-instance S.Serialized ByteString SimpleAccount where
-    runGetter taggedProxy = B.runGet (S.getter taggedProxy)
-    runPutter a = B.runPut (S.putter a)
 
 -- ============================================================================
 -- SimpleAccount Type and Operations (is SuperfluidAccount)
 --
 data SimpleAccount = SimpleAccount
     { address              :: SimpleAddress
-    , agreementAccountData :: M.Map String ByteString
+    , agreementAccountData :: M.Map String SimpleSerialized
     , accountLastUpdatedAt :: SimpleTimestamp
     }
 
-instance SuperfluidTypes SimpleAccount where
-    type SFT_LQ SimpleAccount = Wad
-    type SFT_TS SimpleAccount = SimpleTimestamp
-    type SFT_LQV SimpleAccount = SimpleWadRate
-    type SFT_RTB SimpleAccount = SimpleRealtimeBalance
-    type SFT_ADDR SimpleAccount = SimpleAddress
-
-instance SF.Account SimpleAccount where
+instance SF.Account SimpleAccount SimpleSuperfluidTypes where
     addressOfAccount = address
 
     agreementOfAccount taggedProxy acc = S.runGetter taggedProxy
@@ -117,7 +91,7 @@ newtype SimpleSystemData = SimpleSystemData
 --
 data SimpleTokenData = SimpleTokenData
     { accounts              :: M.Map SimpleAddress SimpleAccount
-    , agreementContractData :: M.Map String ByteString
+    , agreementContractData :: M.Map String SimpleSerialized
     , tokenLastUpdatedAt    :: SimpleTimestamp
     }
 instance Default SimpleTokenData where
@@ -169,6 +143,8 @@ _modifySimpleTokenData = SimpleTokenStateT . modify
 -- | SimpleTokenStateT m is a SuperfluidToken instance
 --
 instance (Monad m) => SF.Token (SimpleTokenStateT m) where
+
+    type TK_SFT (SimpleTokenStateT m) = SimpleSuperfluidTypes
 
     type TK_ACC (SimpleTokenStateT m) = SimpleAccount
 

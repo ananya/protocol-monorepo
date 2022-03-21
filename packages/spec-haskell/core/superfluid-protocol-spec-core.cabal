@@ -19,7 +19,7 @@ library
         Money.Superfluid.SubSystems.BufferBasedSolvency
         Money.Superfluid.Agreements.TransferableBalanceAgreement
         Money.Superfluid.Agreements.ConstantFlowAgreement
-        Money.Superfluid.System.Serialize
+        Money.Superfluid.System.Serialization
         Money.Superfluid.System.AccountTokenModel
 
     hs-source-dirs:   src

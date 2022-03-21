@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Money.Superfluid.System.Serialize
+module Money.Superfluid.System.Serialization
     ( Putter (..)
     , Getter (..)
     , Serializable (..)

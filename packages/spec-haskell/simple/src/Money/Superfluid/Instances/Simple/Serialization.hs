@@ -1,0 +1,30 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+
+module Money.Superfluid.Instances.Simple.Serialization (SimpleSerialized) where
+
+import qualified Data.Binary                                       as B (Binary (..))
+import qualified Data.Binary.Get                                   as B (Get, runGet)
+import qualified Data.Binary.Put                                   as B (PutM, runPut)
+import           Data.ByteString.Lazy                              (ByteString)
+
+import           Money.Superfluid.Instances.Simple.SuperfluidTypes (SimpleSuperfluidTypes)
+import qualified Money.Superfluid.System.Serialization             as S
+
+newtype SimpleSerialized = SimpleSerialized ByteString
+newtype SimpleGetter a = SimpleGetter (B.Get a) deriving (Functor, Applicative, Monad)
+newtype SimplePutter a = SimplePutter (B.PutM a) deriving (Functor, Applicative, Monad)
+
+instance S.Getter SimpleGetter SimpleSuperfluidTypes where
+    getLQ = SimpleGetter B.get
+    getTS = SimpleGetter B.get
+    getLQV = SimpleGetter B.get
+
+instance S.Putter SimplePutter SimpleSuperfluidTypes where
+    putLQ = SimplePutter . B.put
+    putTS = SimplePutter . B.put
+    putLQV = SimplePutter . B.put
+
+instance S.Serialized SimpleSerialized SimpleSuperfluidTypes where
+    runGetter taggedProxy (SimpleSerialized s) = B.runGet m s where (SimpleGetter m) = S.getter taggedProxy
+    runPutter a = SimpleSerialized $ B.runPut m where (SimplePutter m) = S.putter a

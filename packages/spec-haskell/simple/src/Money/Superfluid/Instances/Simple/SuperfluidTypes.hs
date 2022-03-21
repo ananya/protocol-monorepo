@@ -3,6 +3,7 @@
 {-# LANGUAGE DerivingVia                #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 module Money.Superfluid.Instances.Simple.SuperfluidTypes
     ( module Money.Superfluid.Concepts.Liquidity
@@ -21,6 +22,8 @@ module Money.Superfluid.Instances.Simple.SuperfluidTypes
     -- SimpleRealtimeBalance
     , module Money.Superfluid.Concepts.RealtimeBalance
     , SimpleRealtimeBalance
+    -- SimpleSuperfluidTypes
+    , SimpleSuperfluidTypes
     ) where
 
 import           Data.Binary
@@ -115,7 +118,6 @@ instance RealtimeBalance SimpleRealtimeBalance Wad where
         else error "Wrong untyped liquidity vector length"
 
     typedLiquidityVectorToRTB (TypedLiquidityVector (UntappedLiquidity uliq) tvec) = SimpleRealtimeBalance uliq d od
-        -- TODO: reduce it to a single loop
         where d = foldr ((+) . (`getLiquidityOfType` BBS.bufferLiquidityTag)) def tvec
               od = def
 
@@ -131,3 +133,12 @@ newtype SimpleAddress = SimpleAddress String
 -- SimpleAddress public constructor
 createSimpleAddress :: String -> Maybe SimpleAddress
 createSimpleAddress a = if all isAlpha a then Just $ SimpleAddress a else Nothing
+
+data SimpleSuperfluidTypes
+
+instance SuperfluidTypes SimpleSuperfluidTypes where
+    type SFT_LQ SimpleSuperfluidTypes = Wad
+    type SFT_TS SimpleSuperfluidTypes = SimpleTimestamp
+    type SFT_LQV SimpleSuperfluidTypes = SimpleWadRate
+    type SFT_RTB SimpleSuperfluidTypes = SimpleRealtimeBalance
+    type SFT_ADDR SimpleSuperfluidTypes = SimpleAddress
