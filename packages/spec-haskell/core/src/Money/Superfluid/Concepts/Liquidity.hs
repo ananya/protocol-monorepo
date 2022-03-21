@@ -1,7 +1,8 @@
-{-# LANGUAGE FlexibleInstances      #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE GADTs                  #-}
-{-# LANGUAGE TypeApplications       #-}
+{-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FunctionalDependencies     #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralisedNewtypeDeriving #-}
+{-# LANGUAGE TypeApplications           #-}
 
 -- | Liquidity Concept
 --
@@ -41,7 +42,7 @@ import           Money.Superfluid.Concepts.TaggedTypeable
 --
 -- Naming conventions:
 --  * Type name: lq
---  * AccountingUnit type indexer: AU_LQ
+--  * SuperfluidTypes type indexer: SFT_LQ
 class (Default lq, Num lq, Ord lq, Show lq) => Liquidity lq
 
 -- | TypedLiquidity Type Class
@@ -60,7 +61,7 @@ class (Liquidity lq, Show tlq) => TypedLiquidity tlq lq | tlq -> lq where
 -- Naming conventions:
 --  * Term name: uliq
 --
-data UntappedLiquidity lq = UntappedLiquidity lq
+newtype UntappedLiquidity lq = UntappedLiquidity lq deriving (Default)
 
 untappedLiquidityTag :: Proxy UntappedLiquidity
 untappedLiquidityTag = Proxy @UntappedLiquidity
@@ -84,27 +85,27 @@ data AnyTappedLiquidityTag where
 -- Naming conventions for TypedLiquidity:
 --  * Term name: tliq
 --
-data TappedLiquidity lq = TappedLiquidity lq AnyTappedLiquidityTag
+newtype TappedLiquidity lq = TappedLiquidity (AnyTappedLiquidityTag, lq)
 
 instance Liquidity lq => TypedLiquidity (TappedLiquidity lq) lq where
-    untypeLiquidity (TappedLiquidity liq _) = liq
-    isOfTypeTag (TappedLiquidity _ (MkTappedLiquidityTag tag1)) tag2 = typeRep tag1 == typeRep tag2
+    untypeLiquidity (TappedLiquidity (_, liq)) = liq
+    isOfTypeTag (TappedLiquidity (MkTappedLiquidityTag tag1, _)) tag2 = typeRep tag1 == typeRep tag2
 
 instance Liquidity lq => Show (TappedLiquidity lq) where
-    show (TappedLiquidity liq (MkTappedLiquidityTag tagProxy)) = show liq ++ "@" ++ typeTag tagProxy
+    show (TappedLiquidity (MkTappedLiquidityTag tagProxy, liq)) = show liq ++ "@" ++ proxyTag tagProxy
 
 -- | Timestamp Type Class
 --
 -- Naming conventions:
 --  * Type name: ts
---  * AccountingUnit type indexer: AU_TS
+--  * SuperfluidTypes type indexer: SFT_TS
 class (Default ts, Integral ts, Ord ts, Show ts) => Timestamp ts
 
 -- | LiquidityVelocity Type
 --
 -- Naming conventions:
 --  * Type name: lqv
---  * AccountingUnit type indexer: AU_LQV
+--  * SuperfluidTypes type indexer: SFT_LQV
 --  * Term name: liqv
 class (Liquidity lq, Timestamp ts, Liquidity lqv, Show lqv)
     => LiquidityVelocity lqv lq ts

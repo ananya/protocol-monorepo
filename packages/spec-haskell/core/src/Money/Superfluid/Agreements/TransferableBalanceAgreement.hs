@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass        #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -9,12 +8,13 @@ module Money.Superfluid.Agreements.TransferableBalanceAgreement
     , transferLiquidity
     ) where
 
+import           Data.Default
 import           Text.Printf
 
-import           Money.Superfluid.Concepts.AccountingUnit  (AccountingUnit (..))
-import           Money.Superfluid.Concepts.Agreement       (AgreementAccountData (..), AgreementData)
+import           Money.Superfluid.Concepts.Agreement       (AgreementAccountData (..))
 import           Money.Superfluid.Concepts.Liquidity       (UntappedLiquidity (..), untypeLiquidity)
 import           Money.Superfluid.Concepts.RealtimeBalance (untappedLiquidityToRTB)
+import           Money.Superfluid.Concepts.SuperfluidTypes (SuperfluidTypes (..))
 import           Money.Superfluid.Concepts.TaggedTypeable
 
 
@@ -22,37 +22,38 @@ import           Money.Superfluid.Concepts.TaggedTypeable
 -- ============================================================================
 -- | TBAAccountData Type (is AgreementAccountData)
 --
-data AccountingUnit au => TBAAccountData au = TBAAccountData
-    { settledAt :: AU_TS au
-    , liquidity :: UntappedLiquidity (AU_LQ au)
+data SuperfluidTypes sft => TBAAccountData sft = TBAAccountData
+    { settledAt :: SFT_TS sft
+    , liquidity :: UntappedLiquidity (SFT_LQ sft)
     }
-    deriving AgreementData
-instance AccountingUnit au => TaggedTypeable (TBAAccountData au) where typeTag _ = "TBA#"
+instance SuperfluidTypes sft => TaggedTypeable (TBAAccountData sft) where proxyTag _ = "TBA"
+instance SuperfluidTypes sft => Default (TBAAccountData sft) where
+    def = TBAAccountData { settledAt = def, liquidity = def }
 
-_untypedLiquidity :: AccountingUnit au => TBAAccountData au -> AU_LQ au
+_untypedLiquidity :: SuperfluidTypes sft => TBAAccountData sft -> SFT_LQ sft
 _untypedLiquidity = untypeLiquidity . liquidity
 --
--- instance AccountingUnit au => Default (TBAAccountData au) where
+-- instance SuperfluidTypes sft => Default (TBAAccountData sft) where
 --     def = TBAAccountData { settledAt = def, liquidity = UntappedLiquidity def }
 
-instance AccountingUnit au => AgreementAccountData (TBAAccountData au) au where
+instance SuperfluidTypes sft => AgreementAccountData (TBAAccountData sft) sft where
     providedBalanceOfAgreement a _ = untappedLiquidityToRTB $ _untypedLiquidity a
 
-instance AccountingUnit au => Show (TBAAccountData au) where
+instance SuperfluidTypes sft => Show (TBAAccountData sft) where
     show x = printf "{ t = %s, uliq = %s }" (show $ settledAt x) (show $ _untypedLiquidity x)
 
 -- ============================================================================
 -- TBA Operations
 --
-mintLiquidity :: AccountingUnit au => TBAAccountData au -> AU_LQ au -> TBAAccountData au
+mintLiquidity :: SuperfluidTypes sft => TBAAccountData sft -> SFT_LQ sft -> TBAAccountData sft
 mintLiquidity a l = a { liquidity = UntappedLiquidity $ _untypedLiquidity a + l }
 
-burnLiquidity :: AccountingUnit au => TBAAccountData au -> AU_LQ au -> TBAAccountData au
+burnLiquidity :: SuperfluidTypes sft => TBAAccountData sft -> SFT_LQ sft -> TBAAccountData sft
 burnLiquidity a l = a { liquidity = UntappedLiquidity $ _untypedLiquidity a - l }
 
-transferLiquidity :: AccountingUnit au
-    => (TBAAccountData au, TBAAccountData au) -> AU_LQ au
-    -> (TBAAccountData au, TBAAccountData au)
+transferLiquidity :: SuperfluidTypes sft
+    => (TBAAccountData sft, TBAAccountData sft) -> SFT_LQ sft
+    -> (TBAAccountData sft, TBAAccountData sft)
 transferLiquidity (from, to) l =
     ( from { liquidity = UntappedLiquidity $ _untypedLiquidity from - l }
     , to   { liquidity = UntappedLiquidity $ _untypedLiquidity   to + l })

@@ -19,17 +19,21 @@ import           Money.Superfluid.Concepts.Liquidity
     )
 import           Money.Superfluid.Concepts.TaggedTypeable
 
-newtype Liquidity lq => BufferLiquidity lq = BufferLiquidity { getBufferLiquidity :: lq }
-    deriving Default
-instance Liquidity lq => Show (BufferLiquidity lq) where show = show . getBufferLiquidity
-
+-- | BufferLiquidityTag Type and Its Utilities
+--
 data BufferLiquidityTag
+
+instance TaggedTypeable BufferLiquidityTag where proxyTag _ = "d"
 instance TappedLiquidityTag BufferLiquidityTag
-instance TaggedTypeable BufferLiquidityTag where typeTag _ = "d"
+instance Liquidity lq => Show (BufferLiquidity lq) where show = show . getBufferLiquidity
 
 bufferLiquidityTag :: Proxy BufferLiquidityTag
 bufferLiquidityTag = Proxy @BufferLiquidityTag
--- bufferLiquidityTag = TypeTag (typeRep $ Proxy @BufferLiquidity) "d"
 
 mkBufferTappedLiquidity :: Liquidity lq => lq -> TappedLiquidity lq
-mkBufferTappedLiquidity liq = TappedLiquidity liq (MkTappedLiquidityTag bufferLiquidityTag)
+mkBufferTappedLiquidity liq = TappedLiquidity (MkTappedLiquidityTag bufferLiquidityTag, liq)
+
+-- | BufferLiquidity Type
+--
+newtype Liquidity lq => BufferLiquidity lq = BufferLiquidity { getBufferLiquidity :: lq }
+    deriving Default

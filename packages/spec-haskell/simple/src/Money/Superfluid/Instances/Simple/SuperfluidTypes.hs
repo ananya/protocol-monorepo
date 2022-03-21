@@ -6,6 +6,9 @@
 
 module Money.Superfluid.Instances.Simple.SuperfluidTypes
     ( module Money.Superfluid.Concepts.Liquidity
+    -- SimpleAddress
+    , SimpleAddress
+    , createSimpleAddress
     -- Wad
     , Wad (..)
     , toWad
@@ -21,17 +24,19 @@ module Money.Superfluid.Instances.Simple.SuperfluidTypes
     ) where
 
 import           Data.Binary
+import           Data.Char                                       (isAlpha)
 import           Data.Default
 import           GHC.Generics                                    (Generic)
 import           Text.Printf                                     (printf)
 
 import           Money.Superfluid.Concepts.Liquidity
 import           Money.Superfluid.Concepts.RealtimeBalance
+import           Money.Superfluid.Concepts.SuperfluidTypes
 --
 import qualified Money.Superfluid.SubSystems.BufferBasedSolvency as BBS
 
 -- ============================================================================
--- Wad type:
+-- Wad Type:
 --   * 18 decimal digit fixed-precision integer
 --   * an instance of Liquidity
 --
@@ -55,19 +60,21 @@ instance Show Wad where
     show = wad4human
 
 -- ============================================================================
--- SimpleTimestamp Base Type
+-- SimpleTimestamp Type
 --
 newtype SimpleTimestamp = SimpleTimestamp Int
-    deriving newtype (Enum, Eq, Ord, Num, Real, Integral, Default, Binary, Timestamp)
+    deriving newtype (Enum, Eq, Ord, Num, Real, Integral, Default, Binary)
+    deriving anyclass (Timestamp)
 
 instance Show SimpleTimestamp where
     show (SimpleTimestamp t) = show t ++ "s"
 
 -- ============================================================================
--- SimpleWadRate Base Type
+-- SimpleWadRate Type
 --
 newtype SimpleWadRate = SimpleWadRate Wad
-    deriving newtype (Default, Num, Eq, Ord, Binary, Liquidity)
+    deriving newtype (Default, Num, Eq, Ord, Binary)
+    deriving anyclass (Liquidity)
 
 instance LiquidityVelocity SimpleWadRate Wad SimpleTimestamp where
     liquidityPerTimeUnit = SimpleWadRate
@@ -78,7 +85,7 @@ instance Show SimpleWadRate where
      show liqv = (show . liquidityTimesTimeUnit $ liqv) ++ "/s"
 
 -- ============================================================================
--- SimpleRealtimeBalance Base Type
+-- SimpleRealtimeBalance Type
 --
 data SimpleRealtimeBalance = SimpleRealtimeBalance
     { untappedLiquidityVal :: Wad
@@ -111,3 +118,16 @@ instance RealtimeBalance SimpleRealtimeBalance Wad where
         -- TODO: reduce it to a single loop
         where d = foldr ((+) . (`getLiquidityOfType` BBS.bufferLiquidityTag)) def tvec
               od = def
+
+-- ============================================================================
+-- SimpleAddress Type
+--
+-- Note: It must consist of only alphabetical letters
+--
+newtype SimpleAddress = SimpleAddress String
+    deriving newtype (Eq, Ord, Binary, Show)
+    deriving anyclass (Address)
+
+-- SimpleAddress public constructor
+createSimpleAddress :: String -> Maybe SimpleAddress
+createSimpleAddress a = if all isAlpha a then Just $ SimpleAddress a else Nothing

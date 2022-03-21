@@ -14,12 +14,13 @@ library
         Money.Superfluid.Concepts.TaggedTypeable
         Money.Superfluid.Concepts.Liquidity
         Money.Superfluid.Concepts.RealtimeBalance
-        Money.Superfluid.Concepts.AccountingUnit
+        Money.Superfluid.Concepts.SuperfluidTypes
         Money.Superfluid.Concepts.Agreement
         Money.Superfluid.SubSystems.BufferBasedSolvency
         Money.Superfluid.Agreements.TransferableBalanceAgreement
         Money.Superfluid.Agreements.ConstantFlowAgreement
-        Money.Superfluid.System
+        Money.Superfluid.System.Serialize
+        Money.Superfluid.System.AccountTokenModel
 
     hs-source-dirs:   src
     default-language: Haskell2010

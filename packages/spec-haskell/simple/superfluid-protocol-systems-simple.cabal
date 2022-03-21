@@ -1,14 +1,13 @@
-cabal-version:      3.0
-name:               superfluid-protocol-systems-simple
-version:            0.0.1.0
-license:            MIT
-maintainer:         miao@superfluid.finance
-author:             Miao ZhiCheng
-homepage:           https://www.superfluid.finance/
-synopsis:           Superfluid protocol simple system instances
-category:           Money
-build-type:         Simple
--- extra-source-files: CHANGELOG.md
+cabal-version: 3.0
+name:          superfluid-protocol-systems-simple
+version:       0.0.1.0
+license:       MIT
+maintainer:    miao@superfluid.finance
+author:        Miao ZhiCheng
+homepage:      https://www.superfluid.finance/
+synopsis:      Superfluid protocol simple system instances
+category:      Money
+build-type:    Simple
 
 library
     exposed-modules:
@@ -21,6 +20,7 @@ library
     build-depends:
         base >=4.12,
         data-default,
+        bytestring,
         binary,
         containers,
         transformers,

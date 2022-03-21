@@ -34,7 +34,7 @@ data Liquidity lq => TypedLiquidityVector lq = TypedLiquidityVector (UntappedLiq
 --
 -- Naming conventions:
 --  * Type name : rtb
---  * Type family name: AU_RTB
+--  * Type family name: SFT_RTB
 --  * Term name: *RTB *Balance
 class (Liquidity lq, Num rtb, Default rtb, Show rtb) => RealtimeBalance rtb lq | rtb -> lq where
     rawLiquidityVectorFromRTB :: rtb -> [lq]

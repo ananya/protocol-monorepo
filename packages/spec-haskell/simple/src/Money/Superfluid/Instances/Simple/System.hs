@@ -1,13 +1,11 @@
 {-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeFamilies               #-}
 
 module Money.Superfluid.Instances.Simple.System
     ( module Money.Superfluid.Instances.Simple.SuperfluidTypes
-    -- SimpleAddress
-    , SimpleAddress
-    , createSimpleAddress
     -- SimpleAccount
     , SimpleAccount
     , SF.Account (..)
@@ -15,7 +13,7 @@ module Money.Superfluid.Instances.Simple.System
     , SF.sumAccounts
     , listAccounts
     , addAccount
-    -- SuperfluidToken
+    -- Token
     , SimpleSystemData (..)
     , SimpleTokenData
     , SimpleTokenStateT
@@ -23,7 +21,7 @@ module Money.Superfluid.Instances.Simple.System
     , evalSimpleTokenStateT
     , execSimpleTokenStateT
     , getSimpleTokenData
-    , SF.SuperfluidToken (..)
+    , SF.Token (..)
     , initSimpleToken)
     where
 
@@ -31,99 +29,81 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Reader
 import           Control.Monad.Trans.State
-import qualified Data.Binary                                              as B
-import           Data.Binary.Put                                          (runPut)
-import           Data.Char
+import qualified Data.Binary                                       as B (Binary (..))
+import qualified Data.Binary.Get                                   as B (Get, runGet)
+import qualified Data.Binary.Put                                   as B (PutM, runPut)
+import           Data.ByteString.Lazy                              (ByteString)
 import           Data.Default
 import           Data.Functor
-import qualified Data.Map                                                 as M
+import qualified Data.Map                                          as M
 import           Data.Maybe
 
-import           Money.Superfluid.Concepts.AccountingUnit                 (AccountingUnit (..))
-import           Money.Superfluid.Concepts.Agreement
-    ( AnyAgreementAccountData (MkAgreementAccountData)
-    )
+import           Money.Superfluid.Concepts.Agreement               (agreementTypeTag)
+import           Money.Superfluid.Concepts.SuperfluidTypes         (SuperfluidTypes (..))
+import           Money.Superfluid.Concepts.TaggedTypeable
 --
-import qualified Money.Superfluid.Agreements.ConstantFlowAgreement        as CFA
-import qualified Money.Superfluid.Agreements.TransferableBalanceAgreement as TBA
 --
-import qualified Money.Superfluid.System                                  as SF
+import qualified Money.Superfluid.System.AccountTokenModel         as SF
+import qualified Money.Superfluid.System.Serialize                 as S
 
 import           Money.Superfluid.Instances.Simple.SuperfluidTypes
 
 
--- ============================================================================
--- SimpleAddress Base Type
---
--- Note: It must consist of only alphabetical letters
---
-newtype SimpleAddress = SimpleAddress String
-    deriving newtype (Eq, Ord, B.Binary, SF.Address)
+instance S.Getter B.Get SimpleAccount where
+    getLQ = B.get
+    getTS = B.get
+    getLQV = B.get
 
-instance Show SimpleAddress where
-    show (SimpleAddress a) = a
+instance S.Putter B.PutM SimpleAccount where
+    putLQ = B.put
+    putTS = B.put
+    putLQV = B.put
 
--- SimpleAddress public constructor
-createSimpleAddress :: String -> Maybe SimpleAddress
-createSimpleAddress a = if all isAlpha a then Just $ SimpleAddress a else Nothing
-
--- ============================================================================
--- Simple Types for Agreements
---
-type SimpleTBAAccountData = TBA.TBAAccountData SimpleAccount
-type SimpleCFAContractData = CFA.CFAContractData SimpleAccount
-type SimpleCFAAccountData = CFA.CFAAccountData SimpleAccount
+instance S.Serialized ByteString SimpleAccount where
+    runGetter taggedProxy = B.runGet (S.getter taggedProxy)
+    runPutter a = B.runPut (S.putter a)
 
 -- ============================================================================
 -- SimpleAccount Type and Operations (is SuperfluidAccount)
 --
 data SimpleAccount = SimpleAccount
-    { address       :: SimpleAddress
-    , tba           :: SimpleTBAAccountData
-    , cfa           :: SimpleCFAAccountData
-    , lastUpdatedAt :: SimpleTimestamp
+    { address              :: SimpleAddress
+    , agreementAccountData :: M.Map String ByteString
+    , accountLastUpdatedAt :: SimpleTimestamp
     }
 
-instance AccountingUnit SimpleAccount where
-    type AU_LQ SimpleAccount = Wad
-    type AU_TS SimpleAccount = SimpleTimestamp
-    type AU_LQV SimpleAccount = SimpleWadRate
-    type AU_RTB SimpleAccount = SimpleRealtimeBalance
+instance SuperfluidTypes SimpleAccount where
+    type SFT_LQ SimpleAccount = Wad
+    type SFT_TS SimpleAccount = SimpleTimestamp
+    type SFT_LQV SimpleAccount = SimpleWadRate
+    type SFT_RTB SimpleAccount = SimpleRealtimeBalance
+    type SFT_ADDR SimpleAccount = SimpleAddress
 
 instance SF.Account SimpleAccount where
-    type ACC_ADDR SimpleAccount = SimpleAddress
-
-    getTBAAccountData = tba
-
-    getCFAAccountData = cfa
-
-    showAccountAt a t =
-        "Account @" ++ show(address a) ++
-        "\n  Balance: " ++ show(SF.balanceOfAccountAt a t :: SimpleRealtimeBalance) ++
-        "\n  TBA: " ++ show(tba a) ++
-        "\n  CFA: " ++ show(cfa a) ++
-        "\n  Last Update: " ++ show(lastUpdatedAt a)
-
     addressOfAccount = address
 
-    agreementsOfAccount a =
-        [ MkAgreementAccountData $ tba a
-        , MkAgreementAccountData $ cfa a
-        ]
+    agreementOfAccount taggedProxy acc = S.runGetter taggedProxy
+         <$> M.lookup k (agreementAccountData acc)
+         where k = proxyTag taggedProxy
+
+    updateAgreementOfAccount acc aad t = acc
+        { agreementAccountData = M.insert k (S.runPutter aad) (agreementAccountData acc)
+        , accountLastUpdatedAt = t
+        }
+        where k = typeTag aad
+
+    showAccountAt acc t =
+        "Account @" ++ show(SF.addressOfAccount acc) ++
+        "\n  Balance: " ++ show(SF.balanceOfAccountAt acc t) ++
+        concatMap (\a -> "\n  " ++ agreementTypeTag a ++ ": " ++ show a) (SF.agreementsOfAccount acc) ++
+        "\n  Last Update: " ++ show(accountLastUpdatedAt acc)
 
 _createSimpleAccount :: SimpleAddress -> SimpleTimestamp -> SimpleAccount
 _createSimpleAccount toAddress t = SimpleAccount
     { address = toAddress
-    , lastUpdatedAt = t
-    , tba = def
-    , cfa = def
+    , agreementAccountData = def
+    , accountLastUpdatedAt = t
     }
-
-_updateTBAAccountData :: SimpleAccount -> SimpleTimestamp -> SimpleTBAAccountData -> SimpleAccount
-_updateTBAAccountData acc t' tba' = acc { tba = tba', lastUpdatedAt = t' }
-
-_updateCFAAccountData :: SimpleAccount -> SimpleTimestamp -> SimpleCFAAccountData -> SimpleAccount
-_updateCFAAccountData acc t' cfa' = acc { cfa = cfa', lastUpdatedAt = t' }
 
 -- ============================================================================
 -- | SimpleSystemData Type
@@ -136,11 +116,15 @@ newtype SimpleSystemData = SimpleSystemData
 -- | SimpleTokenData Type
 --
 data SimpleTokenData = SimpleTokenData
-    { accounts      :: M.Map SimpleAddress SimpleAccount
-    , cfaAgreements :: M.Map String SimpleCFAContractData
+    { accounts              :: M.Map SimpleAddress SimpleAccount
+    , agreementContractData :: M.Map String ByteString
+    , tokenLastUpdatedAt    :: SimpleTimestamp
     }
 instance Default SimpleTokenData where
-    def = SimpleTokenData { accounts = def, cfaAgreements = def }
+    def = SimpleTokenData { accounts = def, agreementContractData = def, tokenLastUpdatedAt = def }
+
+_acdKey :: [SimpleAddress] -> String
+_acdKey = concatMap (("." ++) . show)
 
 -- ============================================================================
 -- | Simple Monad Transformer stack
@@ -190,39 +174,20 @@ instance (Monad m) => SF.Token (SimpleTokenStateT m) where
 
     getCurrentTime = getSystemData <&> currentTime
 
-    execTokenInstructions t = mapM_ (\case
-        SF.UpdateLiquidity (addr, tbaLiquidity) -> do
-            account <- SF.getAccount addr
-            _modifySimpleTokenData (\vs -> vs {
-                accounts = M.insert
-                    addr
-                    (_updateTBAAccountData account t tbaLiquidity)
-                    (accounts vs)
-            })
-        SF.UpdateFlow (sender, receiver, flow) -> do
-            _modifySimpleTokenData (\vs -> vs {
-                cfaAgreements = M.insert
-                    (show sender ++ ":" ++ show receiver)
-                    flow
-                    (cfaAgreements vs)
-            })
-        SF.UpdateAccountFlow (addr, accountFlow) -> do
-            account <- SF.getAccount addr
-            _modifySimpleTokenData (\vs -> vs {
-                accounts = M.insert
-                    addr
-                    (_updateCFAAccountData account t accountFlow)
-                    (accounts vs)
-            })
-        )
+    getAgreementContractData taggedProxy addrs = getSimpleTokenData >>= \s -> return $
+        S.runGetter taggedProxy <$> M.lookup (_acdKey addrs) (agreementContractData s)
 
-    getAccount a = getSimpleTokenData >>= \s -> return $
-        fromMaybe (_createSimpleAccount a 0) $ M.lookup a (accounts s)
+    putAgreementContractData addrs t acd = _modifySimpleTokenData (\vs -> vs
+        { agreementContractData = M.insert (_acdKey addrs) (S.runPutter acd) (agreementContractData vs)
+        , tokenLastUpdatedAt = t
+        })
+
+    getAccount addr = getSimpleTokenData >>= \s -> return $
+        fromMaybe (_createSimpleAccount addr 0) $ M.lookup addr (accounts s)
+
+    putAccount addr acc = _modifySimpleTokenData (\vs -> vs { accounts = M.insert addr acc (accounts vs) })
 
     calcFlowBuffer = return  . (* Wad 3600)
-
-    getFlow a b = getSimpleTokenData >>= \s -> return $
-        fromMaybe def $ M.lookup (show a ++ ":" ++ show b) (cfaAgreements s)
 
 
 -- | Other SimpleTokenStateT Operations
@@ -232,7 +197,8 @@ initSimpleToken alist initBalance = do
     t <- SF.getCurrentTime
     _putSimpleTokenData SimpleTokenData
         { accounts = M.fromList $ map (\a -> (a, _createSimpleAccount a t)) alist
-        , cfaAgreements = M.empty
+        , agreementContractData = M.empty
+        , tokenLastUpdatedAt = t
         }
     mapM_ (`SF.mintLiquidity` initBalance) alist
 
