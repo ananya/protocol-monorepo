@@ -31,12 +31,12 @@ dev:
 
 .PHONY: test-suite test-demo test dev
 
-loc:
+cloc:
 	@echo '**** Core Source Files ****'
-	find core/src -name '*.hs' | xargs wc -l
+	cloc packages/core/src
 	@echo '**** Non-Core Source Files ****'
-	find simple/src validator/src -name '*.hs' | xargs wc -l
+	cloc packages/simple/src packages/validator/src
 	@echo '**** Test Files ****'
-	find */test -name '*.hs' | xargs wc -l
+	cloc packages/*/test
 
 .PHONY: loc

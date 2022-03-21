@@ -38,7 +38,8 @@ data TokenTestSpec = TokenTestSpec
     }
 
 data TokenTestContext = TokenTestContext
-    { testAddresses :: [SF.SimpleAddress]
+    { testSpec      :: TokenTestSpec
+    , testAddresses :: [SF.SimpleAddress]
     }
 
 data TokenTestCase = TokenTestCase TokenTestSpec (TokenTestContext -> TokenTester ())
