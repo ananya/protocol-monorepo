@@ -49,7 +49,7 @@ createTokenTestCase (TokenTestCase spec runner) = TestLabel (testLabel spec) $ T
     evalStateT (do
         let addresses = map (fromJust . SF.createSimpleAddress) (testAddressesToInit spec)
         mapM_ (`createTestAccount` testAccountInitBalance spec) addresses
-        runner TokenTestContext { testAddresses = addresses }
+        runner TokenTestContext { testSpec = spec, testAddresses = addresses }
         ) TokenTesterData
         { sfSys = SF.SimpleSystemData { SF.currentTime = 0 }
         , token = def

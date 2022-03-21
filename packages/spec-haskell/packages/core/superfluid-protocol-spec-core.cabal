@@ -19,6 +19,7 @@ library
         Money.Superfluid.SubSystems.BufferBasedSolvency
         Money.Superfluid.Agreements.TransferableBalanceAgreement
         Money.Superfluid.Agreements.ConstantFlowAgreement
+        Money.Superfluid.Agreements.DistributionAgreement
         Money.Superfluid.System.Serialization
         Money.Superfluid.System.AccountTokenModel
 

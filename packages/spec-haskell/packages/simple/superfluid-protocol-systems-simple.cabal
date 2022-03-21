@@ -21,8 +21,8 @@ library
     build-depends:
         base >=4.12,
         data-default,
-        bytestring,
-        binary,
         containers,
         transformers,
-        superfluid-protocol-spec-core
+        bytestring,
+        binary,
+        superfluid-protocol-spec-core ==0.0.1.0

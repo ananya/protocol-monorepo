@@ -1,14 +1,13 @@
-cabal-version:      3.0
-name:               superfluid-protocol-spec-validator
-version:            0.0.1.0
-license:            MIT
-maintainer:         miao@superfluid.finance
-author:             Miao ZhiCheng
-homepage:           https://www.superfluid.finance/
-synopsis:           Superfluid protocol specifications validator
-category:           Money
-build-type:         Simple
--- extra-source-files: CHANGELOG.md
+cabal-version: 3.0
+name:          superfluid-protocol-spec-validator
+version:       0.0.1.0
+license:       MIT
+maintainer:    miao@superfluid.finance
+author:        Miao ZhiCheng
+homepage:      https://www.superfluid.finance/
+synopsis:      Superfluid protocol specifications validator
+category:      Money
+build-type:    Simple
 
 executable superfluid-protocol-spec-validator
     main-is:          Main.hs
@@ -21,11 +20,11 @@ executable superfluid-protocol-spec-validator
     ghc-options:      -Wall
     build-depends:
         base >=4.12,
-        containers,
         data-default,
-        time,
+        containers,
         transformers,
-        superfluid-protocol-systems-simple >=0.0.1.0
+        time,
+        superfluid-protocol-systems-simple ==0.0.1.0
 
 test-suite test
     type:             exitcode-stdio-1.0
@@ -39,8 +38,9 @@ test-suite test
     ghc-options:      -Wall -Wno-incomplete-uni-patterns
     build-depends:
         base >=4.12,
-        HUnit >=1.6.2.0,
+        HUnit >=1.6.0.0,
+        time,
         data-default,
         transformers,
-        superfluid-protocol-spec-core >=0.0.1.0,
-        superfluid-protocol-systems-simple >=0.0.1.0
+        superfluid-protocol-spec-core ==0.0.1.0,
+        superfluid-protocol-systems-simple ==0.0.1.0
